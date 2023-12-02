@@ -21,12 +21,17 @@ set rtp+=~/.vim/bundle/Vundle.vim
 
 call vundle#begin()
 Plugin 'VundleVim/Vundle.vim'
-
 Plugin 'sheerun/vim-polyglot'
 Plugin 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 Plugin 'sainnhe/everforest'
 Plugin 'neovim/nvim-lspconfig'
-Plugin 'rust-lang/rust.vim'
+
+" Typescript
+" Plugin 'pmizio/typescript-tools.nvim'
+
+" Rust
+Plugin 'simrat39/rust-tools.nvim'
+
 Plugin 'github/copilot.vim'
 Plugin 'nvim-lua/plenary.nvim'
 Plugin 'nvim-telescope/telescope.nvim', { 'tag': '0.1.4' }
@@ -49,7 +54,7 @@ let g:everforest_better_performance = 1
 colorscheme everforest
 
 let mapleader = " "
-nnoremap <leader>pv :Vex<CR>
+nnoremap <leader>pv :Explore<CR>
 nnoremap <leader><CR> :so ~/.config/nvim/init.vim<CR>
 nnoremap <C-p> :GFiles<CR>
 nnoremap <leader>pf :Files<CR>
@@ -116,12 +121,7 @@ nmap <leader>f  <Plug>(coc-format-selected)
 " CoC settings end
 
 lua << EOF
-require'lspconfig'.tsserver.setup{
-}
-require'lspconfig'.gopls.setup{
-}
-require'lspconfig'.rust_analyzer.setup{
-}
+require('rust-tools').setup()
 
 require('lualine').setup {
   options = {
