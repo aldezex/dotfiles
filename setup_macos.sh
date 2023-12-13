@@ -1,11 +1,9 @@
 #!/bin/bash
 
-
 # Check if homebrew is installed
 # If not, install it
 if command -v brew &> /dev/null 2>&1; then
-    echo "Homebrew found. Updating..."
-    brew update
+    echo "Homebrew found." 
 else
     echo "Homebrew not found. Installing..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -21,6 +19,14 @@ else
     brew install vim
 fi
 
+# clone Vundle if not already cloned
+if [ ! -d ~/.vim/bundle/Vundle.vim ]; then
+    echo "Vundle not found. Cloning..."
+    git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+else
+    echo "Vundle found. Updating..."
+fi
+     
 # Check if we have neovim installed
 # If not, install it
 if command -v nvim &> /dev/null 2>&1; then
@@ -30,20 +36,6 @@ else
     echo "Neovim not found. Installing..."
     brew install neovim
 fi
-
-# Check if we have nvm installed
-# If not, install it
-#if command -v nvm &> /dev/null 2>&1; then
-#    echo "NVM found."
-#else
-#    echo "NVM not found. Installing..."
-#    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-#
-#    export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-#    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-#
-#    nvm install 18.9
-#fi
 
 # Check if we have iterm2 installed
 # If not, install it
@@ -55,8 +47,12 @@ fi
 #fi
 
 # Download mirage theme for iterm2
-# curl -o ~/Downloads/mirage.itermcolors https://raw.githubusercontent.com/mbadolato/iTerm2-Color-Schemes/master/schemes/Ayu%20Mirage.itermcolors
-# echo "Mirage theme for iTerm2 downloaded."
+curl -o ~/Downloads/mirage.itermcolors https://raw.githubusercontent.com/mbadolato/iTerm2-Color-Schemes/master/schemes/Ayu%20Mirage.itermcolors
+echo "Mirage theme for iTerm2 downloaded. Please, install manually."
+
+# Download Firacode Nerd Fonts
+curl -o https://github.com/ryanoasis/nerd-fonts/releases/download/v3.1.1/EnvyCodeR.zip
+echo "Nerd Fonts downloaded. Please, install manually"
 
 # Check if we have fish installed
 # If not, install it
@@ -90,7 +86,29 @@ echo "Moving nvim configurations..."
 mkdir -p ~/.config/nvim
 cp -r ./nvim/macOS/* ~/.config/nvim
 
-# Move configurations from ./fish/macOS to ~/.config/fish
+# Move configurations from ./fish to ~/.config/fish
 echo "Moving fish configurations..."
 mkdir -p ~/.config/fish
-cp -r ./fish/macOS/* ~/.config/fish
+cp ./fish/config.fish ~/.config/fish/
+
+# configure fish as default shell
+echo "Configuring fish as default shell..."
+sudo sh -c 'echo /opt/homebrew/bin/fish >> /etc/shells'
+chsh -s /opt/homebrew/bin/fish
+
+# Check if we have nvm installed
+# If not, install it
+if command -v nvm &> /dev/null 2>&1; then
+    echo "NVM found."
+else
+    fisher install jorgebucaran/nvm.fish
+    nvm install 20
+fi
+
+echo "Installing neovim plugins"
+nvim -c 'PluginInstall' -c 'qa!'
+
+# Install CoC for nvim
+echo "Installing CoC"
+cd ~/.vim/bundle/coc.nvim/ && npm ci
+
