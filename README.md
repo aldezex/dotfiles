@@ -46,7 +46,7 @@ This repository contains a bash script for setting up a basic development enviro
 ## Notes
 
 - The script is intended for macOS users and assumes Homebrew as the primary package manager.
-- NVM and iTerm2 installation sections are commented out. Uncomment these sections if you wish to include their setup.
+- iTerm2 installation sections are commented out. Uncomment these sections if you wish to include their setup.
 - The script copies Neovim and Fish configurations from specific directories. Ensure these directories contain the desired configuration files.
 
 ## Troubleshooting
