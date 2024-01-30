@@ -26,7 +26,10 @@ Plugin 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 Plugin 'neovim/nvim-lspconfig'
 
 Plugin 'nvim-lualine/lualine.nvim'
-Plugin 'sainnhe/everforest'
+Plugin 'Luxed/ayu-vim'
+
+" Go
+Plugin 'ray-x/go.nvim'
 
 " Typescript
 " Plugin 'pmizio/typescript-tools.nvim'
@@ -46,10 +49,8 @@ call vundle#end()
 filetype plugin indent on    
 
 set termguicolors
-set background=dark
-let g:everforest_better_performance = 1
-let g:everforest_background = 'soft'
-colorscheme everforest
+let g:ayucolor="mirage"
+colorscheme ayu
 
 let mapleader = " "
 nnoremap <leader>pv :Explore<CR>
@@ -64,8 +65,15 @@ nnoremap <leader>sa :bprev<CR>
 nnoremap <leader>sd :bnext<CR>
 nnoremap <leader>ca :cprev<CR>
 nnoremap <leader>cd :cnext<CR>
-nnoremap <silent> <leader>h :lua vim.lsp.buf.hover()<CR>
 nnoremap <silent> <leader>rn :lua vim.lsp.buf.rename()<CR>
+nnoremap b q
+xnoremap b q
+nnoremap q b
+xnoremap q b
+nnoremap B Q
+xnoremap B Q
+nnoremap Q B
+xnoremap Q B
 
 " CoC settings start
 inoremap <silent><expr> <TAB>
@@ -128,7 +136,9 @@ require('rust-tools').setup()
 local actions = require('telescope.actions')
 require('telescope').setup {
     defaults = {
-        file_ignore_patterns = { "node_modules" }
+        file_ignore_patterns = { "node_modules", "target", "dist" }
     }
 }
+
+require('go').setup()
 EOF
