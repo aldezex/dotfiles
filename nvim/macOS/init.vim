@@ -32,7 +32,7 @@ Plugin 'Luxed/ayu-vim'
 Plugin 'ray-x/go.nvim'
 
 " Typescript
-" Plugin 'pmizio/typescript-tools.nvim'
+Plugin 'pmizio/typescript-tools.nvim'
 
 " Rust
 Plugin 'simrat39/rust-tools.nvim'
@@ -74,6 +74,12 @@ nnoremap B Q
 xnoremap B Q
 nnoremap Q B
 xnoremap Q B
+
+" copy current path
+nnoremap <leader>cp :let @*=expand('%:p')<CR>
+
+" Run :Prettier when switching out of insert mode
+autocmd InsertLeave * :Prettier
 
 " CoC settings start
 inoremap <silent><expr> <TAB>
