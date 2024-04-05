@@ -1,4 +1,4 @@
-set scrolloff=8
+set scrolloff=20
 set number 
 set relativenumber 
 set tabstop=4 softtabstop=4
@@ -29,13 +29,15 @@ Plugin 'nvim-lualine/lualine.nvim'
 Plugin 'Luxed/ayu-vim'
 
 " Go
-Plugin 'ray-x/go.nvim'
+Plugin 'fatih/vim-go'
 
 " Typescript
 Plugin 'pmizio/typescript-tools.nvim'
 
 " Rust
 Plugin 'simrat39/rust-tools.nvim'
+
+Plugin 'kdheepak/lazygit.nvim'
 
 Plugin 'github/copilot.vim'
 Plugin 'nvim-lua/plenary.nvim'
@@ -75,11 +77,18 @@ xnoremap B Q
 nnoremap Q B
 xnoremap Q B
 
+" nice remaps?
+nnoremap <leader>y "+y
+vnoremap <leader>y "+y
+nnoremap <leader>Y gg"+yG
+nnoremap <leader>d "_d
+vnoremap <leader>d "_d
+
+" call :LazyGit
+nnoremap <leader>gg :LazyGit<CR>
+
 " copy current path
 nnoremap <leader>cp :let @*=expand('%:p')<CR>
-
-" Run :Prettier when switching out of insert mode
-autocmd InsertLeave * :Prettier
 
 " CoC settings start
 inoremap <silent><expr> <TAB>
@@ -146,5 +155,12 @@ require('telescope').setup {
     }
 }
 
-require('go').setup()
+
+require'nvim-treesitter.configs'.setup {
+  ensure_installed = "all",     
+  highlight = {
+    enable = true              
+  },
+}
+
 EOF
