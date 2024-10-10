@@ -21,23 +21,16 @@ set rtp+=~/.vim/bundle/Vundle.vim
 
 call vundle#begin()
 Plugin 'VundleVim/Vundle.vim'
-Plugin 'sheerun/vim-polyglot'
 Plugin 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 Plugin 'neovim/nvim-lspconfig'
 
 Plugin 'nvim-lualine/lualine.nvim'
 Plugin 'Luxed/ayu-vim'
 
-" Go
-Plugin 'fatih/vim-go'
-
 " Typescript
 Plugin 'pmizio/typescript-tools.nvim'
 
-" Rust
-Plugin 'simrat39/rust-tools.nvim'
-
-Plugin 'kdheepak/lazygit.nvim'
+Plugin 'tpope/vim-surround'
 
 Plugin 'github/copilot.vim'
 Plugin 'nvim-lua/plenary.nvim'
@@ -57,16 +50,10 @@ colorscheme ayu
 let mapleader = " "
 nnoremap <leader>pv :Explore<CR>
 nnoremap <leader><CR> :so ~/.config/nvim/init.vim<CR>
-nnoremap <C-p> :GFiles<CR>
-nnoremap <leader>pf :Files<CR>
 nnoremap <leader>ff <cmd>Telescope find_files<CR>
 nnoremap <leader>fg <cmd>Telescope live_grep<CR>
 nnoremap <leader>fb <cmd>Telescope buffers<CR>
 nnoremap <leader>fh <cmd>Telescope help_tags<CR>
-nnoremap <leader>sa :bprev<CR>
-nnoremap <leader>sd :bnext<CR>
-nnoremap <leader>ca :cprev<CR>
-nnoremap <leader>cd :cnext<CR>
 nnoremap <silent> <leader>rn :lua vim.lsp.buf.rename()<CR>
 nnoremap b q
 xnoremap b q
@@ -80,9 +67,8 @@ xnoremap Q B
 " nice remaps?
 nnoremap <leader>y "+y
 vnoremap <leader>y "+y
-nnoremap <leader>Y gg"+yG
-nnoremap <leader>d "_d
-vnoremap <leader>d "_d
+nnoremap <leader>uc gUU
+nnoremap <leader>lc guu
 
 " call :LazyGit
 nnoremap <leader>gg :LazyGit<CR>
@@ -143,10 +129,16 @@ vmap <leader>f  <Plug>(coc-format-selected)
 nmap <leader>f  <Plug>(coc-format-selected)
 " CoC settings end
 
+let g:go_auto_type_info = 1
+let g:go_doc_popup_window = 1
+
+augroup AutoPrettier
+  autocmd!
+  autocmd BufWritePre *.ts,*.tsx,*.js,*.jsx,*.css,*.html,*.json :Prettier
+augroup END
+
 lua << EOF
 require('lualine').setup()
-
-require('rust-tools').setup()
 
 local actions = require('telescope.actions')
 require('telescope').setup {
@@ -155,7 +147,6 @@ require('telescope').setup {
     }
 }
 
-
 require'nvim-treesitter.configs'.setup {
   ensure_installed = "all",     
   highlight = {
@@ -163,4 +154,11 @@ require'nvim-treesitter.configs'.setup {
   },
 }
 
+require('typescript-tools').setup {
+  lsp = {
+    on_attach = function(client)
+      client.resolved_capabilities.document_formatting = false
+    end
+  }
+}
 EOF
