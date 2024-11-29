@@ -1,0 +1,61 @@
+[
+  {
+    "context": "Editor || Workspace",
+    "bindings": {
+      "ctrl-shift-e": "workspace::ToggleLeftDock",
+      "ctrl-x": "pane::CloseActiveItem"
+    }
+  },
+  {
+    "context": "Workspace",
+    "bindings": {
+      // "shift shift": "file_finder::Toggle"
+    }
+  },
+  {
+    "context": "EmptyPane || SharedScreen || vim_mode == normal",
+    "bindings": {
+      "space f b": ["file_finder::Toggle", { "separate_history": true }],
+      "space f i": "file_finder::Toggle",
+      "ctrl-s": "projects::OpenRecent",
+      "space r t": "editor::SpawnNearestTask",
+      "space r l": "task::Rerun"
+    }
+  },
+  {
+    "context": "Editor && vim_mode == normal",
+    "bindings": {
+      // "j k": ["workspace::SendKeystrokes", "escape"]
+      "q": "vim::PreviousWordStart",
+      "Q": "vim::PreviousWordEnd"
+    }
+  },
+  {
+    "context": "Editor && VimControl && !VimWaiting && !menu",
+    "bindings": {
+      "g ]": "editor::GoToDiagnostic",
+      "g [": "editor::GoToPrevDiagnostic",
+      "g a": "editor::ToggleCodeActions",
+      "g r": "editor::Rename",
+      "j": [
+        "vim::Down",
+        {
+          "displayLines": true
+        }
+      ],
+      "k": [
+        "vim::Up",
+        {
+          "displayLines": true
+        }
+      ]
+    }
+  },
+  {
+    "context": "Editor && vim_mode == visual",
+    "bindings": {
+      "q": "vim::PreviousWordStart",
+      "Q": "vim::PreviousWordEnd"
+    }
+  }
+]

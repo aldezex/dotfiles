@@ -1,0 +1,82 @@
+{
+  "ui_font_size": 16,
+  "buffer_font_size": 16,
+  "ui_font_family": "FiraCode Nerd Font",
+  "buffer_font_family": "FiraCode Nerd Font",
+  "theme": {
+    "mode": "system",
+    "light": "One Light",
+    "dark": "One Light"
+  },
+  "inlay_hints": {
+    "enabled": true
+  },
+  "vim_mode": true,
+  "relative_line_numbers": true,
+  "soft_wrap": "none",
+  "cursor_blink": false,
+  "assistant": {
+    "default_model": {
+      "provider": "zed.dev",
+      "model": "claude-3-5-sonnet-latest"
+    },
+    "version": "2"
+  },
+  "project_panel": {
+    "dock": "right",
+    "show_diagnostics": "all",
+    "scrollbar": { "show": "never" }
+  },
+  "base_keymap": "VSCode",
+  "indent_guides": {
+    "enabled": false
+  },
+  "current_line_highlight": "none",
+  "preview_tabs": {
+    "enabled": false,
+    "enable_preview_from_code_navigation": false
+  },
+  "lsp": {
+    "rust": {
+      "server": "rust-analyzer"
+    },
+    "gopls": {
+      "initialization_options": {
+        "usePlaceholders": true,
+        "completeUnimported": false,
+        "experimentalPostfixCompletions": true,
+        "hints": {
+          "assignVariableTypes": false,
+          "compositeLiteralFields": false,
+          "compositeLiteralTypes": false,
+          "constantValues": true,
+          "functionTypeParameters": true,
+          "parameterNames": true,
+          "rangeVariableTypes": true
+        }
+      }
+    }
+  },
+  "use_on_type_format": false,
+  "languages": {
+    "JSON": {
+      "prettier": {
+        "allowed": true,
+        "parser": "json"
+      }
+    },
+    "TypeScript": {
+      "code_actions_on_format": {
+        "source.fixAll.eslint": true
+      }
+    },
+    "JavaScript": {
+      "code_actions_on_format": {
+        "source.fixAll.eslint": true
+      }
+    },
+    "Rust": {
+      "use_on_type_format": false
+    }
+  }
+}
