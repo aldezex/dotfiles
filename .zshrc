@@ -1,17 +1,10 @@
-# Java configuration
-export JAVA_HOME=/Users/alvaro/.sdkman/candidates/java/8.0.352.fx-zulu
-export PATH=$JAVA_HOME/bin:$PATH
+export ZSH="$HOME/.oh-my-zsh"
+plugins=(git)
 
-# Path configuration
-export PATH=/Users/alvaro/.local/bin:/Users/alvaro/.cabal/bin:/Users/alvaro/.ghcup/bin:/Users/alvaro/.pyenv/shims:/Users/alvaro/.nvm/versions/node/v20.11.1/bin:/Users/alvaro/.sdkman/candidates/maven/current/bin:/Users/alvaro/.sdkman/candidates/java/current/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/Library/Apple/usr/bin:/usr/local/go/bin:/Users/alvaro/.cargo/bin
+source $ZSH/oh-my-zsh.sh
 
 # Initialize starship prompt
 eval "$(starship init zsh)"
-
-# Vim alias
-vim() {
-    nvim "$@"
-}
 
 # Config editing aliases
 alias efc='nvim ~/.zshrc'
@@ -26,20 +19,7 @@ alias gd='git diff'
 alias gdc='git diff --cached'
 alias co='git checkout'
 
-# Fuzzy checkout function
-fo() {
-    local branch
-    branch=$(git branch --no-color --sort=-committerdate --format='%(refname:short)' | fzf --header 'git checkout')
-    [[ -n "$branch" ]] && git checkout "$branch"
-}
-
-# PR checkout function
-po() {
-    local pr_branch
-    pr_branch=$(gh pr list --author "@me" | fzf --header 'checkout PR' | awk '{print $(NF-5)}')
-    [[ -n "$pr_branch" ]] && git checkout "$pr_branch"
-}
-
+# Git aliases
 alias gup='git push'
 alias upf='git push --force'
 alias pu='git pull'
@@ -65,13 +45,14 @@ alias tmm='tmux new -s main'
 alias kts='tmux kill-server'
 alias lts='tmux list-sessions'
 
-# pnpm configuration
-export PNPM_HOME="/Users/alvaro/Library/pnpm"
-export PATH="$PNPM_HOME:$PATH"
+# Vim alias
+vim() {
+    nvim "$@"
+}
 
-# GHCup configuration
-[ -z "$GHCUP_INSTALL_BASE_PREFIX" ] && export GHCUP_INSTALL_BASE_PREFIX=$HOME
-export PATH="$HOME/.cabal/bin:$PATH:/Users/alvaro/.ghcup/bin"
+# NVM
+export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 
 # Navigate up function
 up() {
@@ -99,3 +80,17 @@ up() {
 
 # Alias for up function
 alias .='up'
+
+# Fuzzy checkout function
+fo() {
+    local branch
+    branch=$(git branch --no-color --sort=-committerdate --format='%(refname:short)' | fzf --header 'git checkout')
+    [[ -n "$branch" ]] && git checkout "$branch"
+}
+
+# PR checkout function
+po() {
+    local pr_branch
+    pr_branch=$(gh pr list --author "@me" | fzf --header 'checkout PR' | awk '{print $(NF-5)}')
+    [[ -n "$pr_branch" ]] && git checkout "$pr_branch"
+}
