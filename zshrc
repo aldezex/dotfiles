@@ -94,3 +94,4 @@ po() {
     pr_branch=$(gh pr list --author "@me" | fzf --header 'checkout PR' | awk '{print $(NF-5)}')
     [[ -n "$pr_branch" ]] && git checkout "$pr_branch"
 }
+
