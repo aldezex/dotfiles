@@ -1,0 +1,30 @@
+onboarding = false
+[update]
+channel = "preview"
+
+[keys]
+prefix = "ctrl+q"
+
+previous_tab = ["prefix+p", "prefix+e"]
+next_tab = ["prefix+n", "prefix+shift+e"]
+close_tab = ["prefix+shift+x", "prefix+shift+k"]
+
+reload_config = "prefix+r"
+resize_mode = "prefix+shift+r"
+
+edit_scrollback = "prefix+u"
+
+focus_pane_left = ["prefix+h", "alt+left"]
+focus_pane_down = ["prefix+j", "alt+down"]
+focus_pane_up = ["prefix+k", "alt+up"]
+focus_pane_right = ["prefix+l", "alt+right"]
+
+split_vertical = ["prefix+v", "prefix+shift+minus"]
+split_horizontal = "prefix+minus"
+
+previous_workspace = "prefix+shift+9"
+next_workspace = "prefix+shift+0"
+
+next_agent = "prefix+a"
+previous_agent = "prefix+shift+a"
+focus_agent = "prefix+alt+1..9"
