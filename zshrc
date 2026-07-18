@@ -95,3 +95,22 @@ po() {
     [[ -n "$pr_branch" ]] && git checkout "$pr_branch"
 }
 
+
+# pnpm
+export PNPM_HOME="/Users/alvaro/Library/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end
+
+# bun completions
+[ -s "/Users/alvaro/.bun/_bun" ] && source "/Users/alvaro/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
+# zig
+export PATH="/opt/homebrew/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
