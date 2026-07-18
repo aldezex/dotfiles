@@ -1,4 +1,4 @@
-#!/usr/bin/env pwsh
+﻿#!/usr/bin/env pwsh
 #
 # Equivalente de install.sh para Windows.
 #
@@ -61,23 +61,30 @@ foreach ($entry in $Links.GetEnumerator()) {
         continue
     }
 
-    # Hay algo real ahí (o un symlink a otro sitio): guardarlo antes.
+    # Hay algo real ahí (o un symlink a otro sitio): guardarlo antes, pero sin
+    # borrar el original todavía — si el symlink falla más abajo, se queda
+    # donde estaba en vez de perderse.
+    $backupPath = $null
     if ($existing) {
         if (-not $DryRun) {
             $backupPath = Join-Path $BackupDir $entry.Value
             New-Item -ItemType Directory -Force -Path (Split-Path -Parent $backupPath) | Out-Null
             Copy-Item -LiteralPath $dest -Destination $backupPath -Recurse -Force
-            Remove-Item -LiteralPath $dest -Recurse -Force
         }
         $backedUp++
     }
 
     if (-not $DryRun) {
         New-Item -ItemType Directory -Force -Path (Split-Path -Parent $dest) | Out-Null
+        if ($existing) { Remove-Item -LiteralPath $dest -Recurse -Force }
         try {
             New-Item -ItemType SymbolicLink -Path $dest -Target $src -Force | Out-Null
         } catch {
             Write-Host "!! no se pudo enlazar $($entry.Value): $($_.Exception.Message)"
+            if ($backupPath) {
+                Copy-Item -LiteralPath $backupPath -Destination $dest -Recurse -Force
+                Write-Host "   restaurado desde el backup, sin cambios netos"
+            }
             $failed++
             continue
         }
