@@ -24,8 +24,6 @@ LINKS=(
     "gitignore_global:.config/git/ignore"
     "tmux.conf:.tmux.conf"
     "ghostty.config:.config/ghostty/config"
-    "zed_settings.json:.config/zed/settings.json"
-    "zed_keymap.json:.config/zed/keymap.json"
     "herdr.toml:.config/herdr/config.toml"
     "herdr-hotkeys-cheatsheet.md:.config/herdr/hotkeys-cheatsheet.md"
     "claude_settings.json:.claude/settings.json"
