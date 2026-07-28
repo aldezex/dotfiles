@@ -1,9 +1,9 @@
 {
-  "model": "opus",
   "attribution": {
     "commit": "",
     "pr": ""
   },
+  "model": "opus[1m]",
   "hooks": {
     "SessionStart": [
       {
@@ -13,6 +13,23 @@
             "type": "command",
             "command": "bash '/Users/alvaro/.claude/hooks/herdr-agent-state.sh' session",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "bash '/Users/alvaro/.claude/hooks/session-cleanup.sh'",
+            "timeout": 120
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/Users/alvaro/.claude/hooks/session-cleanup.sh'",
+            "timeout": 120
           }
         ]
       }
@@ -39,5 +56,6 @@
       }
     }
   },
+  "effortLevel": "xhigh",
   "theme": "dark"
 }

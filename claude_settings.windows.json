@@ -8,6 +8,32 @@
     "type": "command",
     "command": "pwsh -NoProfile -File ~\\.claude\\statusline.ps1"
   },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -Command \"bash ~/.claude/hooks/session-cleanup.sh\"",
+            "timeout": 120
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -Command \"bash ~/.claude/hooks/session-cleanup.sh\"",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
+  },
   "enabledPlugins": {
     "superpowers@claude-plugins-official": true,
     "superpowers@superpowers-marketplace": true,

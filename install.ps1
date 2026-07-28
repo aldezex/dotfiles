@@ -28,6 +28,8 @@ $Links = [ordered]@{
     'gitignore_global'             = '.config\git\ignore'
     'claude_settings.windows.json' = '.claude\settings.json'
     'claude_statusline.ps1'        = '.claude\statusline.ps1'
+    'claude_CLAUDE.md'             = '.claude\CLAUDE.md'
+    'claude_hook_session-cleanup.sh' = '.claude\hooks\session-cleanup.sh'
 }
 
 # Sin equivalente en Windows. Se listan al final para que quede claro que es

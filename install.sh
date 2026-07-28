@@ -29,6 +29,8 @@ LINKS=(
     "claude_settings.json:.claude/settings.json"
     "claude_statusline.sh:.claude/statusline.sh"
     "claude_hook_herdr-agent-state.sh:.claude/hooks/herdr-agent-state.sh"
+    "claude_CLAUDE.md:.claude/CLAUDE.md"
+    "claude_hook_session-cleanup.sh:.claude/hooks/session-cleanup.sh"
 )
 
 backed_up=0
