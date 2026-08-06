@@ -25,6 +25,26 @@
   sup = "!git branch --set-upstream-to=origin/`git symbolic-ref --short HEAD`"
 [core]
   excludesfile = ~/.config/git/ignore
+  # delta: paginador de diffs con sintaxis y números de línea.
+  # El `|| less` no es cosmético: git lanza el paginador con `sh -c`, así que en
+  # una máquina donde delta no esté instalado esto sale 127 y cae a less, en vez
+  # de dejar `git diff` roto. Este fichero se comparte entre máquinas.
+  pager = delta 2>/dev/null || less
+
+[interactive]
+  # Mismo motivo que arriba: sin el `|| cat`, un `git add -p` en una máquina sin
+  # delta se quedaría sin poder pintar el hunk.
+  diffFilter = delta --color-only 2>/dev/null || cat
+
+[delta]
+  line-numbers = true
+  navigate = true      # n / N para saltar de fichero a fichero dentro del diff
+
+[merge]
+  conflictstyle = zdiff3
+
+[diff]
+  colorMoved = default
 
 [color]
   diff = auto

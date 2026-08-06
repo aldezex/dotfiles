@@ -3,12 +3,37 @@ plugins=(git)
 
 source $ZSH/oh-my-zsh.sh
 
+# PATH — va ANTES que nada que se ejecute al cargar este fichero.
+# starship, nvim, fzf, gh, fd y go viven en ~/.local/bin: si el PATH se montara
+# al final (donde lo dejan los instaladores), la línea de starship de aquí abajo
+# se ejecutaría con un PATH que todavía no lo contiene y el arranque de cada
+# terminal soltaría un «command not found: starship» — sin prompt de starship.
+export PATH="/opt/homebrew/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
+
 # Initialize starship prompt
-eval "$(starship init zsh)"
+# Con guarda: si un día starship no está instalado, no queremos un error en cada
+# arranque, sólo el prompt de oh-my-zsh.
+command -v starship >/dev/null && eval "$(starship init zsh)"
 
 # Config editing aliases
 alias efc='nvim ~/.zshrc'
 alias sf='source ~/.zshrc'
+
+# eza: `ls` con colores por tipo, iconos y estado de git.
+# Todo bajo guarda: en una máquina sin eza se cae al `ls` de siempre en vez de
+# dejar la terminal sin `ls`.
+if command -v eza >/dev/null; then
+    alias ls='eza --icons --group-directories-first'
+    alias ll='eza --icons --group-directories-first --long --git --header'
+    alias la='eza --icons --group-directories-first --long --git --header --all'
+    alias lt='eza --icons --group-directories-first --tree --level=2'
+fi
+
+# bat: `cat` con resaltado de sintaxis.
+# En Debian/Ubuntu el binario se llama `batcat`, no `bat`: el nombre `bat` ya lo
+# ocupaba el paquete bacula-console-qt. En macOS y en el resto es `bat` a secas.
+command -v batcat >/dev/null && alias bat='batcat'
 
 # Git aliases
 alias gst='git status'
@@ -97,7 +122,12 @@ po() {
 
 
 # pnpm
-export PNPM_HOME="/Users/alvaro/Library/pnpm"
+if [ -z "${PNPM_HOME:-}" ]; then
+  case "$(uname -s)" in
+    Darwin) export PNPM_HOME="$HOME/Library/pnpm" ;;
+    *)      export PNPM_HOME="$HOME/.local/share/pnpm" ;;
+  esac
+fi
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
@@ -105,12 +135,23 @@ esac
 # pnpm end
 
 # bun completions
-[ -s "/Users/alvaro/.bun/_bun" ] && source "/Users/alvaro/.bun/_bun"
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
-# zig
-export PATH="/opt/homebrew/bin:$PATH"
-export PATH="$HOME/.local/bin:$PATH"
+# (/opt/homebrew/bin y ~/.local/bin se montan arriba del todo, a propósito.)
+
+# rust (rustup): pone cargo, rustfmt y rust-analyzer en el PATH.
+# `\.` y no `.` porque más arriba `.` está aliaseado a la función `up`.
+[ -s "$HOME/.cargo/env" ] && \. "$HOME/.cargo/env"
+
+# go: binarios instalados con `go install`
+[ -d "$HOME/go/bin" ] && export PATH="$HOME/go/bin:$PATH"
+
+# zoxide: `cd` con memoria de los sitios más visitados — `z mtgg` desde donde sea.
+# Va al FINAL a propósito: engancha un hook al prompt y quiere el compinit que
+# hace oh-my-zsh ya cerrado. No toca `cd`, así que la función `up` y el alias `.`
+# siguen exactamente igual; añade `z` y `zi` (este último con selector fzf).
+command -v zoxide >/dev/null && eval "$(zoxide init zsh)"
