@@ -74,3 +74,15 @@
 	rebase = true
 [protocol "file"]
 	allow = always
+# Puesto por `gh auth setup-git`, con la ruta al binario reescrita a mano.
+# gh escribe ahí la ruta ABSOLUTA de la máquina donde se lanzó
+# (/home/scami/.local/bin/gh en la WSL), y este fichero se comparte: en el Mac
+# esa ruta no existe. Basta con `gh`, que se resuelve por PATH en las tres.
+# El `helper = ` vacío de cada bloque no sobra: descarta los helpers heredados
+# de configuraciones de sistema antes de poner el nuestro.
+[credential "https://github.com"]
+	helper =
+	helper = !gh auth git-credential
+[credential "https://gist.github.com"]
+	helper =
+	helper = !gh auth git-credential
