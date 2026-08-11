@@ -19,38 +19,58 @@
 
   ruf = "!. ~/.githelpers && remove_untracked_files"
 
-	tree = log --oneline --decorate --graph
-
-  # Taken from here: https://aaronbonner.io/post/80766268890/git-alias-to-simplify-setting-upstream-branch
-  sup = "!git branch --set-upstream-to=origin/`git symbolic-ref --short HEAD`"
-[core]
-  excludesfile = ~/.config/git/ignore
+  tree = log --oneline --decorate --graph
 
 [color]
   diff = auto
   status = auto
   branch = auto
-	ui = true
+  ui = true
 
 [push]
-	default = current
-	followTags = true
+  default = current
+  followTags = true
+  # Creates the branch on origin on first push. Replaces the old `sup` alias.
+  autoSetupRemote = true
 
 [remote]
   pushDefault = origin
 
 [branch]
-	autosetuprebase = always
+  autosetuprebase = always
+  # `git branch` by recency instead of alphabetically, matching how `fo` sorts.
+  sort = -committerdate
+
+[diff]
+  # histogram reads considerably better than the default algorithm.
+  algorithm = histogram
+  # Tells moved code apart from genuinely added code.
+  colorMoved = zebra
+
+[merge]
+  # Shows the common ancestor in a conflict too, not just the two sides.
+  conflictStyle = zdiff3
+
+[rerere]
+  # Remembers how a conflict was resolved and replays it. With
+  # autosetuprebase = always this pays off as soon as a rebase drags on.
+  enabled = true
+  autoUpdate = true
 
 [diff "gpg"]
-	binary = true
-	textconv = gpg -d --quiet --yes --compress-algo=none --no-encrypt-to --batch --use-agent
+  binary = true
+  textconv = gpg -d --quiet --yes --compress-algo=none --no-encrypt-to --batch --use-agent
 
 [commit]
-	verbose = true
+  verbose = true
+
 [init]
-	defaultBranch = main
+  defaultBranch = main
+
 [pull]
-	rebase = true
-[protocol "file"]
-	allow = always
+  rebase = true
+
+# protocol.file.allow used to be "always", which reopens the CVE-2022-39253
+# vector (a hostile .gitmodules pointing at local paths) in every repo you
+# clone. When a local-submodule test needs it, pass it per invocation:
+#     git -c protocol.file.allow=always clone …

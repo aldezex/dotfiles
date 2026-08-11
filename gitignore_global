@@ -1,1 +1,15 @@
+# Ignored across every repo. Symlinked to ~/.config/git/ignore, which is the
+# path git already looks at by default via XDG (hence no core.excludesfile).
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editors
+.idea/
+*.swp
+*.swo
+
+# Claude Code: local permissions belong to this machine, not to the project.
 **/.claude/settings.local.json

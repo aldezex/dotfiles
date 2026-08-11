@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-# Funciones usadas por los alias de ~/.gitconfig.
-# Se cargan con `. ~/.githelpers` desde los propios alias.
+# Functions used by the aliases in ~/.gitconfig.
+# They are loaded with `. ~/.githelpers` from the aliases themselves.
 
 HASH="%C(yellow)%h%Creset"
 RELATIVE_TIME="%Cgreen(%ar)%Creset"
@@ -11,31 +11,31 @@ SUBJECT="%s"
 
 FORMAT="$HASH}$RELATIVE_TIME}$AUTHOR}$REFS $SUBJECT"
 
-# Log en una línea por commit, con las columnas alineadas.
-# `column -t -s '}'` parte por el separador que metemos en $FORMAT.
+# One line per commit, with the columns aligned.
+# `column -t -s '}'` splits on the separator baked into $FORMAT.
 pretty_git_log() {
     git log --graph --abbrev-commit --date=relative --pretty="tformat:${FORMAT}" "$@" |
         column -t -s '}' |
         less -FXRS
 }
 
-# Borra ficheros sin trackear. Enseña primero qué se va a cargar y pide
-# confirmación: `git clean -fd` no tiene vuelta atrás.
+# Delete untracked files. Shows what is about to go and asks first:
+# `git clean -fd` has no undo.
 remove_untracked_files() {
     local files
     files=$(git clean -nd "$@")
 
     if [ -z "$files" ]; then
-        echo "No hay ficheros sin trackear que borrar."
+        echo "No untracked files to delete."
         return 0
     fi
 
     echo "$files"
     echo
-    printf "¿Borrar lo de arriba? [y/N] "
+    printf "Delete the above? [y/N] "
     read -r reply
     case "$reply" in
         [yY]) git clean -fd "$@" ;;
-        *)    echo "Cancelado." ;;
+        *)    echo "Cancelled." ;;
     esac
 }
