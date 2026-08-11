@@ -13,6 +13,10 @@
 
 # Core
 brew "git"            # newer than the distro's, and the same on both machines
+# Both this repo and the nvim one are public. `gitleaks git .` scans the whole
+# history, not just the working tree, which is the part that matters once
+# something has already been pushed.
+brew "gitleaks"
 
 # Shell
 brew "starship"       # prompt, driven from zshrc
@@ -24,6 +28,10 @@ brew "zoxide"         # the z command
 brew "fd"             # friendlier find, used by fzf
 
 # Editor
+# Deliberately unpinned. The config tracks nvim-treesitter's main branch, whose
+# API targets current Neovim, so pinning to an older major would fight both brew
+# and the plugin. Verified against 0.12.x: servers get their config through
+# vim.lsp.config, treesitter attaches, no startup errors.
 brew "neovim"
 brew "ripgrep"        # telescope live_grep
 brew "lazygit"        # <leader>gg in nvim
