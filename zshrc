@@ -1,16 +1,97 @@
-export ZSH="$HOME/.oh-my-zsh"
-plugins=(git)
+# ~/.zshrc — symlinked from ~/dotfiles/zshrc
+#
+# No framework. What oh-my-zsh provided (completion, history, keybindings) is
+# spelled out here in about twenty lines; its git aliases were being redefined
+# further down anyway.
 
-source $ZSH/oh-my-zsh.sh
+# ---------------------------------------------------------------------------
+# PATH and Homebrew
+# ---------------------------------------------------------------------------
+# /opt/homebrew on macOS (Apple Silicon), linuxbrew on Linux and WSL. On macOS
+# ~/.zprofile already does this with `brew shellenv`; this is the safety net.
+for _brew in /opt/homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew; do
+    [ -x "$_brew" ] && eval "$("$_brew" shellenv)" && break
+done
+unset _brew
 
-# Initialize starship prompt
+# typeset -U keeps $path free of duplicates, so `sf` does not keep growing it.
+typeset -U path PATH
+path=("$HOME/.local/bin" $path)
+
+# ---------------------------------------------------------------------------
+# History
+# ---------------------------------------------------------------------------
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=50000
+SAVEHIST=50000              # oh-my-zsh saved 10000 while loading 50000
+
+setopt extended_history         # record timestamp and duration per command
+setopt hist_expire_dups_first
+setopt hist_ignore_dups
+setopt hist_ignore_space        # a line starting with a space is not recorded
+setopt hist_verify              # !! expands for review instead of running
+setopt share_history            # history shared across open shells
+setopt inc_append_history
+
+# ---------------------------------------------------------------------------
+# Shell options
+# ---------------------------------------------------------------------------
+setopt auto_cd                  # typing a bare path cds into it
+setopt auto_pushd               # every cd pushes; `cd -<TAB>` lists where you have been
+setopt pushd_ignore_dups
+setopt extended_glob
+setopt interactive_comments     # allow # comments on the interactive line
+setopt no_beep
+
+# ---------------------------------------------------------------------------
+# Completion
+# ---------------------------------------------------------------------------
+# Rebuilding the dump on every startup costs ~20 ms, so it is only regenerated
+# when it is more than a day old; the rest of the time it loads with -C.
+autoload -Uz compinit
+_zdump="${ZDOTDIR:-$HOME}/.zcompdump"
+if [[ -n ${_zdump}(#qN.mh+24) ]]; then
+    compinit -d "$_zdump"
+else
+    compinit -C -d "$_zdump"
+fi
+unset _zdump
+
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'   # complete case-insensitively
+zstyle ':completion:*' use-cache on
+zstyle ':completion:*' cache-path "${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
+
+# ---------------------------------------------------------------------------
+# Keys
+# ---------------------------------------------------------------------------
+bindkey -e                                      # emacs mode
+
+# Up/Down search history by what is already typed, not blindly.
+autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
+bindkey '^[[A' up-line-or-beginning-search
+bindkey '^[[B' down-line-or-beginning-search
+
+bindkey '^[[1;5C' forward-word                  # Ctrl+Right
+bindkey '^[[1;5D' backward-word                 # Ctrl+Left
+bindkey '^[[3~'   delete-char
+
+# ---------------------------------------------------------------------------
+# Prompt
+# ---------------------------------------------------------------------------
 eval "$(starship init zsh)"
 
-# Config editing aliases
+# ---------------------------------------------------------------------------
+# Aliases
+# ---------------------------------------------------------------------------
+# Config
 alias efc='nvim ~/.zshrc'
 alias sf='source ~/.zshrc'
+alias evc='nvim ~/.config/nvim'
 
-# Git aliases
+# Git
 alias gst='git status'
 alias gaa='git add -A'
 alias gc='git commit'
@@ -18,99 +99,114 @@ alias gcm='git checkout main'
 alias gd='git diff'
 alias gdc='git diff --cached'
 alias co='git checkout'
-
-# Git aliases
 alias gup='git push'
-alias upf='git push --force'
+alias upf='git push --force-with-lease'   # plain --force overwrites whatever someone else pushed
 alias pu='git pull'
 alias pur='git pull --rebase'
 alias fe='git fetch'
 alias re='git rebase'
 alias lr='git l -30'
-alias cdr='cd $(git rev-parse --show-toplevel)' # cd to git Root
+alias cdr='cd $(git rev-parse --show-toplevel)'
 alias hs='git rev-parse --short HEAD'
 alias hm='git log --format=%B -n 1 HEAD'
 
-# Vim config alias
-alias evc='nvim ~/.config/nvim'
-
-# Fun alias
 alias bear='clear && echo "Clear as a bear!"'
 
-# Tmux aliases
-alias etm='nvim ~/.tmux.conf'
-alias tma='tmux attach -t'
-alias tmn='tmux new -s'
-alias tmm='tmux new -s main'
-alias kts='tmux kill-server'
-alias lts='tmux list-sessions'
-
-# Vim alias
+# ---------------------------------------------------------------------------
+# Functions
+# ---------------------------------------------------------------------------
 vim() {
     nvim "$@"
 }
 
-# NVM
-export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
-
-# Navigate up function
+# Walk up the tree to the first directory whose name contains $1.
 up() {
     if [ -z "$1" ]; then
-        echo "Uso: .nombre_directorio"
+        echo "Usage: , directory_name"
         return 1
     fi
-    
+
     local current_path="$PWD"
     while [ "$current_path" != "/" ]; do
         local parent_dir="$(dirname "$current_path")"
         local matching_dir="$(find "$parent_dir" -maxdepth 1 -type d -name "*$1*" | head -n 1)"
-        
+
         if [ -n "$matching_dir" ]; then
             cd "$matching_dir"
             return 0
         fi
-        
+
         current_path="$parent_dir"
     done
-    
-    echo "No se encontró un directorio que coincida con '$1'"
+
+    echo "No directory matching '$1' was found"
     return 1
 }
+# This used to be `.`, which is the POSIX source builtin: it broke
+# `. venv/bin/activate` and anything else copied out of a README.
+alias ,='up'
 
-# Alias for up function
-alias .='up'
-
-# Fuzzy checkout function
+# Fuzzy checkout over branches sorted by date.
 fo() {
     local branch
     branch=$(git branch --no-color --sort=-committerdate --format='%(refname:short)' | fzf --header 'git checkout')
     [[ -n "$branch" ]] && git checkout "$branch"
 }
 
-# PR checkout function
+# Check out one of your own PRs.
 po() {
     local pr_branch
     pr_branch=$(gh pr list --author "@me" | fzf --header 'checkout PR' | awk '{print $(NF-5)}')
     [[ -n "$pr_branch" ]] && git checkout "$pr_branch"
 }
 
+# ---------------------------------------------------------------------------
+# Toolchains
+# ---------------------------------------------------------------------------
+# nvm: sourcing nvm.sh costs ~200 ms, two thirds of the whole startup. Instead
+# the bin directory of the `default` version goes straight onto PATH — which is
+# all that node/npm/npx need — and nvm itself loads the first time it is called.
+export NVM_DIR="$HOME/.nvm"
+() {
+    emulate -L zsh
+    setopt local_options null_glob numeric_glob_sort
 
-# pnpm
-export PNPM_HOME="/Users/alvaro/Library/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
-# pnpm end
+    local marker=''
+    [ -r "$NVM_DIR/alias/default" ] && marker=$(<"$NVM_DIR/alias/default")
 
-# bun completions
-[ -s "/Users/alvaro/.bun/_bun" ] && source "/Users/alvaro/.bun/_bun"
+    local -a candidates
+    case "$marker" in
+        v*)         candidates=("$NVM_DIR/versions/node/$marker"/bin) ;;
+        ''|lts/*)   candidates=("$NVM_DIR/versions/node"/v*/bin) ;;
+        *)          candidates=("$NVM_DIR/versions/node/v${marker}"/bin
+                                "$NVM_DIR/versions/node/v${marker}".*/bin) ;;
+    esac
+
+    # numeric_glob_sort orders by number, so the last one is the highest.
+    (( $#candidates )) && path=("${candidates[-1]}" $path)
+}
+
+nvm() {
+    unset -f nvm
+    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+    nvm "$@"
+}
+
+# pnpm — the default location differs between macOS and Linux/WSL
+if [[ "$OSTYPE" == darwin* ]]; then
+    export PNPM_HOME="$HOME/Library/pnpm"
+else
+    export PNPM_HOME="${XDG_DATA_HOME:-$HOME/.local/share}/pnpm"
+fi
+path=("$PNPM_HOME" $path)
 
 # bun
 export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
+path=("$BUN_INSTALL/bin" $path)
+[ -s "$BUN_INSTALL/_bun" ] && source "$BUN_INSTALL/_bun"
 
-# zig
-export PATH="/opt/homebrew/bin:$PATH"
-export PATH="$HOME/.local/bin:$PATH"
+# >>> railway initialize >>>
+# Guarded with -f: on a machine without the Railway CLI (a freshly set up WSL,
+# say) a bare `source` fails on every single zsh startup.
+[ -f "$HOME/.railway/env" ] && source "$HOME/.railway/env"
+# <<< railway initialize <<<
