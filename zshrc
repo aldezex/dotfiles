@@ -228,6 +228,22 @@ path=("$BUN_INSTALL/bin" $path)
 # go: binaries installed with `go install`
 [ -d "$HOME/go/bin" ] && path=("$HOME/go/bin" $path)
 
+# fzf shell integration: Ctrl+R over history, Ctrl+T to insert a path, Alt+C to
+# cd into a directory. Without this fzf is only ever reached through the fo()
+# and po() helpers above, which is most of the tool left on the table.
+# Needs compinit already run, hence its place down here.
+if command -v fzf >/dev/null; then
+    source <(fzf --zsh)
+
+    # fd backs the file and directory pickers: it honours .gitignore and skips
+    # .git, which plain find does not.
+    if command -v fd >/dev/null; then
+        export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
+        export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+        export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude .git'
+    fi
+fi
+
 # zoxide: `cd` that remembers where you go most — `z mtgg` from anywhere.
 # Deliberately last: it hooks into the prompt and wants compinit already done.
 # It does not touch `cd`, so the `up` function and its `,` alias are unaffected;
