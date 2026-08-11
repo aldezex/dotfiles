@@ -11,12 +11,17 @@
 # Shell
 brew "starship"       # prompt, driven from zshrc
 brew "fzf"            # required by the fo() and po() helpers
-brew "gh"             # required by po()
+brew "gh"             # required by po(), and by the git credential helper
+brew "eza"            # ls/ll/la/lt aliases
+brew "bat"            # cat with highlighting
+brew "zoxide"         # the z command
+brew "fd"             # friendlier find, used by fzf
 
 # Editor
 brew "neovim"
 brew "ripgrep"        # telescope live_grep
 brew "lazygit"        # <leader>gg in nvim
+brew "git-delta"      # git pager, wired up in gitconfig
 
 # Claude Code
 brew "jq"             # statusline.sh parses its stdin with it

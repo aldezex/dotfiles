@@ -81,7 +81,9 @@ bindkey '^[[3~'   delete-char
 # ---------------------------------------------------------------------------
 # Prompt
 # ---------------------------------------------------------------------------
-eval "$(starship init zsh)"
+# Guarded: on a machine where starship is not installed we want the plain
+# zsh prompt, not an error on every single startup.
+command -v starship >/dev/null && eval "$(starship init zsh)"
 
 # ---------------------------------------------------------------------------
 # Aliases
@@ -90,6 +92,21 @@ eval "$(starship init zsh)"
 alias efc='nvim ~/.zshrc'
 alias sf='source ~/.zshrc'
 alias evc='nvim ~/.config/nvim'
+
+# eza: `ls` with colours by type, icons and git status.
+# All guarded: on a machine without eza this falls back to the normal `ls`
+# rather than leaving the terminal with no `ls` at all.
+if command -v eza >/dev/null; then
+    alias ls='eza --icons --group-directories-first'
+    alias ll='eza --icons --group-directories-first --long --git --header'
+    alias la='eza --icons --group-directories-first --long --git --header --all'
+    alias lt='eza --icons --group-directories-first --tree --level=2'
+fi
+
+# bat: `cat` with syntax highlighting.
+# On Debian/Ubuntu the binary is called `batcat`, not `bat`: the `bat` name was
+# already taken by the bacula-console-qt package. Everywhere else it is `bat`.
+command -v batcat >/dev/null && alias bat='batcat'
 
 # Git
 alias gst='git status'
@@ -204,6 +221,18 @@ path=("$PNPM_HOME" $path)
 export BUN_INSTALL="$HOME/.bun"
 path=("$BUN_INSTALL/bin" $path)
 [ -s "$BUN_INSTALL/_bun" ] && source "$BUN_INSTALL/_bun"
+
+# rust (rustup): puts cargo, rustfmt and rust-analyzer on PATH.
+[ -s "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+
+# go: binaries installed with `go install`
+[ -d "$HOME/go/bin" ] && path=("$HOME/go/bin" $path)
+
+# zoxide: `cd` that remembers where you go most — `z mtgg` from anywhere.
+# Deliberately last: it hooks into the prompt and wants compinit already done.
+# It does not touch `cd`, so the `up` function and its `,` alias are unaffected;
+# it adds `z` and `zi`, the latter with an fzf picker.
+command -v zoxide >/dev/null && eval "$(zoxide init zsh)"
 
 # >>> railway initialize >>>
 # Guarded with -f: on a machine without the Railway CLI (a freshly set up WSL,

@@ -21,6 +21,22 @@
 
   tree = log --oneline --decorate --graph
 
+[core]
+  # delta: diff pager with syntax highlighting and line numbers.
+  # The `|| less` is not cosmetic: git launches the pager with `sh -c`, so on a
+  # machine without delta this exits 127 and falls back to less instead of
+  # leaving `git diff` broken. This file is shared across machines.
+  pager = delta 2>/dev/null || less
+
+[interactive]
+  # Same reason: without the `|| cat`, `git add -p` on a machine without delta
+  # would have nothing to render the hunk with.
+  diffFilter = delta --color-only 2>/dev/null || cat
+
+[delta]
+  line-numbers = true
+  navigate = true      # n / N jump between files inside the diff
+
 [color]
   diff = auto
   status = auto
@@ -69,6 +85,19 @@
 
 [pull]
   rebase = true
+
+# Written by `gh auth setup-git`, with the path to the binary rewritten by hand.
+# gh writes the ABSOLUTE path of the machine it ran on (/home/scami/.local/bin/gh
+# under WSL), and this file is shared: that path does not exist on the Mac. Plain
+# `gh` resolves through PATH on all of them.
+# The empty `helper =` in each block is not redundant: it discards helpers
+# inherited from system-wide configuration before ours is added.
+[credential "https://github.com"]
+  helper =
+  helper = !gh auth git-credential
+[credential "https://gist.github.com"]
+  helper =
+  helper = !gh auth git-credential
 
 # protocol.file.allow used to be "always", which reopens the CVE-2022-39253
 # vector (a hostile .gitmodules pointing at local paths) in every repo you
