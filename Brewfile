@@ -1,12 +1,18 @@
-# Packages the configs in this repo actually depend on. `install.sh` runs
-# `brew bundle` at the end, so a fresh machine gets the tools before the
-# configs that call them get linked.
+# Every tool the configs in this repo actually call. `setup-and-install.sh` runs
+# `brew bundle` before linking, so a fresh machine has the tools by the time the
+# configs that call them arrive.
 #
-# Works the same on macOS and on Linuxbrew under WSL.
+# This is the single source of packages on both machines. On Linux and WSL, apt
+# installs only Homebrew's own prerequisites plus zsh (the login shell); every
+# formula below has an x86_64_linux bottle, so nothing here builds from source
+# under WSL.
 #
 #   brew bundle            install what is missing
 #   brew bundle check      report what is missing, install nothing
 #   brew bundle cleanup    list installed packages that are not listed here
+
+# Core
+brew "git"            # newer than the distro's, and the same on both machines
 
 # Shell
 brew "starship"       # prompt, driven from zshrc
@@ -36,3 +42,6 @@ brew "biome"          # js / ts / jsx / tsx
 brew "lua-language-server"
 brew "gopls"
 brew "rust-analyzer"
+# Pulls in brew's node and typescript. nvm's node still comes first on PATH,
+# so this only backs the language server, it does not take over your toolchain.
+brew "typescript-language-server"

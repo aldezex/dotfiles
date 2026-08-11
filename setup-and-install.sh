@@ -54,7 +54,17 @@ LINKS=(
 NVIM_REPO="https://github.com/aldezex/nvim.git"
 NVIM_DIR="$HOME/.config/nvim"
 
-# Base packages Linux needs before Homebrew will even build.
+# The only packages that come from apt. Everything else — every tool the
+# configs actually call — comes from the Brewfile, so both machines run the same
+# versions from the same manifest.
+#
+# The first five are Homebrew's own documented prerequisites: it cannot be
+# installed, let alone build anything, without them.
+#
+# zsh is the deliberate exception. It is the login shell, and a login shell
+# belongs to the system: it has to exist before Homebrew's PATH is set up, it
+# has to work under sudo and PAM, and if it lived under /home/linuxbrew a broken
+# brew prefix would mean not being able to log in at all.
 APT_BASE=(build-essential procps curl file git zsh)
 
 # ---------------------------------------------------------------------------
@@ -160,6 +170,8 @@ ensure_brew() {
         return 0
     fi
 
+    # On Linux this lands in /home/linuxbrew/.linuxbrew and needs sudo once.
+    # zshrc and zprofile both find it there on their own afterwards.
     warn "  homebrew missing, installing"
     if $DRY_RUN; then
         say "  would run the official Homebrew installer"
