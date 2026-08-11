@@ -1,0 +1,147 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+# The shape mirrors ~/.claude/statusline.sh: the first line says where you are,
+# the second is where you type. Reference detail — language versions, how long
+# the last command took — goes right and muted, because colour on the left is
+# what carries meaning. Same rule as the statusline, where the bar's colour is
+# the signal and the rest is grey.
+
+format = """
+$directory$git_branch$git_status$git_state
+$character"""
+
+right_format = "$cmd_duration$rust$golang$nodejs$bun$python$lua$haskell"
+
+add_newline = true
+scan_timeout = 10
+command_timeout = 500
+palette = "nanowise"
+
+# Straight out of ~/.config/nvim/colors/nanowise.lua, so the prompt, the editor
+# and the Claude statusline all speak the same colours. The names are the roles,
+# not the hues: change a hex here and every module follows.
+[palettes.nanowise]
+location = "#5DD9FF"   # nanowise `parameter` — the cyan the statusline uses for context
+clean    = "#B3FF63"   # `constant` — the green of the statusline's 🌿 branch
+warn     = "#FFCC00"   # `func` / `warning`
+danger   = "#FF5C57"   # `number` / `delete`
+special  = "#FF577F"   # `keyword` — reserved for "you are mid-something"
+muted    = "#7D808C"   # `comment`
+dim      = "#9194A2"   # `fg_gutter`
+
+[directory]
+style = "bold location"
+format = "[ $path]($style)[$read_only]($read_only_style) "
+truncation_length = 3
+truncate_to_repo = true
+truncation_symbol = ""
+read_only = "  "
+read_only_style = "danger"
+
+[git_branch]
+symbol = " "
+style = "clean"
+format = "[$symbol$branch]($style) "
+
+# ASCII counters rather than a wall of glyphs: at a glance you want to know how
+# many of what, and +2 ~1 reads faster than two icons.
+[git_status]
+style = "warn"
+format = "([$all_status$ahead_behind]($style) )"
+conflicted = "[!${count}](danger) "
+deleted    = "[-${count}](danger) "
+staged     = "+${count} "
+modified   = "~${count} "
+untracked  = "?${count} "
+renamed    = "»${count} "
+stashed    = "*${count} "
+ahead      = "↑${count} "
+behind     = "↓${count} "
+diverged   = "↑${ahead_count}↓${behind_count} "
+
+# Mid-rebase or mid-merge is the one state worth interrupting the palette for,
+# which is what `keyword` pink is for in nanowise.
+[git_state]
+style = "bold special"
+format = "([$state( $progress_current/$progress_total)]($style) )"
+
+[cmd_duration]
+min_time = 2000
+style = "muted"
+format = "[ $duration]($style) "
+
+[character]
+success_symbol = "[❯](bold clean)"
+error_symbol = "[❯](bold danger)"
+vimcmd_symbol = "[❮](bold location)"
+
+# ---------------------------------------------------------------------------
+# Languages
+# ---------------------------------------------------------------------------
+# Symbol only, no version. Every one of these modules shells out to the
+# toolchain to read a version string, and that cost lands on every prompt in
+# every project directory. What you need to know is which toolchain a directory
+# belongs to; when the version actually matters you are already running
+# `rustc --version` yourself.
+
+[rust]
+symbol = " "
+style = "dim"
+format = "[$symbol]($style)"
+
+[golang]
+symbol = " "
+style = "dim"
+format = "[$symbol]($style)"
+
+[nodejs]
+symbol = " "
+style = "dim"
+format = "[$symbol]($style)"
+
+# starship goes quiet on [nodejs] as soon as there is a bun.lock and hands over
+# to this module, so without it a bun project shows no runtime at all — which is
+# both of the ones on this machine.
+[bun]
+symbol = " "
+style = "dim"
+format = "[$symbol]($style)"
+
+[python]
+symbol = " "
+style = "dim"
+format = "[$symbol]($style)"
+
+[lua]
+symbol = " "
+style = "dim"
+format = "[$symbol]($style)"
+
+[haskell]
+symbol = " "
+style = "dim"
+format = "[$symbol]($style)"
+
+# ---------------------------------------------------------------------------
+# Off
+# ---------------------------------------------------------------------------
+# The prompt renders on every keystroke of every shell; anything that is not
+# read several times a day is noise. These are the defaults that would show up
+# without earning it.
+[package]
+disabled = true     # duplicates the language modules, and parses manifests to do it
+
+[aws]
+disabled = true
+
+[gcloud]
+disabled = true
+
+[docker_context]
+disabled = true
+
+[nix_shell]
+disabled = true
+
+[hostname]
+ssh_only = true

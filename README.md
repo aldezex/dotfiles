@@ -68,6 +68,7 @@ here and add its path to the `LINKS` array at the top of the script.
 | `gitconfig` | `~/.gitconfig` |
 | `githelpers` | `~/.githelpers` |
 | `gitignore_global` | `~/.config/git/ignore` |
+| `starship.toml` | `~/.config/starship.toml` |
 | `ghostty.config` | `~/.config/ghostty/config` |
 | `herdr.toml` | `~/.config/herdr/config.toml` |
 | `herdr-hotkeys-cheatsheet.md` | `~/.config/herdr/hotkeys-cheatsheet.md` |
