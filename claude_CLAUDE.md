@@ -1,41 +1,48 @@
-# Instrucciones globales
+# Global instructions
 
-## OBLIGATORIO: no dejes basura detrás
+## MANDATORY: do not leave junk behind
 
-Regla de Álvaro (28-07-2026, tras quedarnos sin disco: 266 clones del repo mtgg abandonados
-en `/private/tmp` ocupaban 268 GB, y ni un solo agente los recogió).
+Álvaro's rule (2026-07-28, after running out of disk: 266 abandoned clones of
+the mtgg repo in `/private/tmp` taking up 268 GB, and not one agent picked them
+up).
 
-**Todo lo que generes fuera del repo es tuyo y lo recoges tú antes de terminar.** Esto incluye:
+**Anything you generate outside the repo is yours, and you collect it before you
+finish.** That includes:
 
-- **Clones y copias temporales** en el temporal del sistema — `/tmp` y `/private/tmp` en
-  macOS, `/tmp` en Linux, `%TEMP%` en Windows — o en cualquier scratch. Si haces un
-  `git clone` o `cp -r` del proyecto para probar algo, bórralo al acabar.
-- **Worktrees de git.** Si creas uno, lo eliminas con `git worktree remove` cuando termines.
-  Comprueba con `git worktree list` que no dejas ninguno de más.
-- **Artefactos de build dentro de esas copias**: `node_modules`, `target`, `.next`, `dist`,
-  `build`, `__pycache__`, `.venv`. En una copia temporal pesan 1-2 GB cada una.
-- **Contenedores, imágenes y volúmenes de Docker** que hayas creado para una prueba puntual.
+- **Clones and temporary copies** in the system temp directory — `$TMPDIR`,
+  `/tmp` and `/private/tmp` on macOS; `/tmp` on Linux and WSL — or in any
+  scratch area. If you `git clone` or `cp -r` the project to try something,
+  delete it when you are done.
+- **Git worktrees.** If you create one, remove it with `git worktree remove`
+  when you finish. Check with `git worktree list` that you left none behind.
+- **Build artifacts inside those copies**: `node_modules`, `target`, `.next`,
+  `dist`, `build`, `__pycache__`, `.venv`. In a temporary copy those run
+  1-2 GB each.
+- **Docker containers, images and volumes** created for a one-off test.
 
-### Cómo hacerlo bien
+### How to do it right
 
-1. **Trabaja dentro del proyecto siempre que puedas.** Un worktree en `.claude/worktrees/`
-   es preferible a un clone suelto en `/tmp`: se ve en `git worktree list` y no se pierde.
-2. **Si necesitas un scratch, usa el directorio de scratchpad de la sesión**, no `/private/tmp`
-   a pelo. El harness lo aísla y lo etiqueta.
-3. **Antes de dar una tarea por terminada**, comprueba y limpia:
+1. **Work inside the project whenever you can.** A worktree under
+   `.claude/worktrees/` beats a loose clone in `/tmp`: it shows up in
+   `git worktree list` instead of getting lost.
+2. **If you need scratch space, use the session scratchpad directory**, not
+   `/private/tmp` directly. The harness isolates and labels it.
+3. **Before calling a task done**, check and clean up:
    ```
-   git worktree list                 # ¿queda alguno que hayas creado tú?
-   ls "${TMPDIR:-/tmp}" /tmp         # ¿queda alguna copia tuya? (en Windows: ls "$TEMP")
-   docker ps -a && docker images     # ¿queda algo de una prueba?
+   git worktree list                 # any left that you created?
+   ls "${TMPDIR:-/tmp}" /tmp         # any copies of yours left?
+   docker ps -a && docker images     # anything left from a test?
    ```
-4. **Nunca borres a ciegas.** Antes de eliminar una copia o un worktree, verifica que no
-   tiene cambios sin commitear ni commits que no estén en el repo de origen. Si los tiene,
-   no lo borres: díselo a Álvaro.
+4. **Never delete blindly.** Before removing a copy or a worktree, verify it has
+   no uncommitted changes and no commits missing from the origin repo. If it
+   does, leave it and tell Álvaro.
 
-### Red de seguridad
+### Safety net
 
-Hay un hook (`~/.claude/hooks/session-cleanup.sh`, registrado en `SessionStart` y
-`SessionEnd`) que barre lo que se escape. **No es excusa para no limpiar**: es deliberadamente
-conservador y sólo borra lo que puede probar que es desechable — respeta cualquier cosa
-modificada en la última hora, con cambios sin commitear o con commits únicos. Todo lo que
-decide conservar queda anotado en `~/.claude/session-cleanup-report.log`.
+There is a hook (`~/.claude/hooks/session-cleanup.sh`, registered on
+`SessionStart` and `SessionEnd`) that sweeps up whatever escapes. **That is not
+an excuse to skip cleaning up**: it is deliberately conservative and only
+deletes what it can prove is disposable — it respects anything modified in the
+last hour, anything with uncommitted changes, and anything holding commits that
+are not on a remote. Everything it decides to keep is recorded in
+`~/.claude/session-cleanup-report.log`.
