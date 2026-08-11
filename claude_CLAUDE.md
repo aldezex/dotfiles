@@ -2,8 +2,8 @@
 
 ## MANDATORY: do not leave junk behind
 
-Álvaro's rule (2026-07-28, after running out of disk: 266 abandoned clones of
-the mtgg repo in `/private/tmp` taking up 268 GB, and not one agent picked them
+Álvaro's rule (2026-07-28, after running out of disk: 266 abandoned clones of a
+single repo in `/private/tmp` taking up 268 GB, and not one agent picked them
 up).
 
 **Anything you generate outside the repo is yours, and you collect it before you

@@ -87,9 +87,9 @@
   rebase = true
 
 # Written by `gh auth setup-git`, with the path to the binary rewritten by hand.
-# gh writes the ABSOLUTE path of the machine it ran on (/home/scami/.local/bin/gh
-# under WSL), and this file is shared: that path does not exist on the Mac. Plain
-# `gh` resolves through PATH on all of them.
+# gh writes the ABSOLUTE path of the machine it ran on, and this file is shared
+# between machines, so that path does not exist on the other one. Plain `gh`
+# resolves through PATH everywhere.
 # The empty `helper =` in each block is not redundant: it discards helpers
 # inherited from system-wide configuration before ours is added.
 [credential "https://github.com"]

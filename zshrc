@@ -244,7 +244,7 @@ if command -v fzf >/dev/null; then
     fi
 fi
 
-# zoxide: `cd` that remembers where you go most — `z mtgg` from anywhere.
+# zoxide: `cd` that remembers where you go most — `z proj` from anywhere.
 # Deliberately last: it hooks into the prompt and wants compinit already done.
 # It does not touch `cd`, so the `up` function and its `,` alias are unaffected;
 # it adds `z` and `zi`, the latter with an fzf picker.
