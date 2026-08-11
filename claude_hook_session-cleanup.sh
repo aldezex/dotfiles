@@ -1,20 +1,22 @@
 #!/usr/bin/env bash
-# session-cleanup.sh — se ejecuta al empezar y al terminar una sesión de Claude Code.
+# session-cleanup.sh — runs when a Claude Code session starts and when it ends.
 #
-# Borra lo que los agentes generan y nunca recogen: clones temporales en el directorio
-# temporal del sistema y worktrees de git huérfanos. Todo lo que NO se pueda borrar sin
-# riesgo se deja en su sitio y se anota en el informe; nunca se pierde trabajo en silencio.
+# Deletes what agents generate and never pick up: throwaway clones in the system
+# temp directory and orphaned git worktrees. Anything that cannot be removed
+# safely is left alone and recorded in the report; work is never lost silently.
 #
-# Portable: macOS, Linux y Windows (Git Bash / WSL). No asume rutas absolutas ni GNU vs BSD.
+# Portable across macOS and Linux (WSL included). Assumes no absolute paths and
+# no GNU-vs-BSD tool differences.
 #
-# Reglas de seguridad (por qué no borra más de la cuenta):
-#   1. Nada tocado en los últimos GRACE_MIN minutos  -> puede ser una sesión paralela viva.
-#   2. Nada con cambios sin commitear                -> se anota y se conserva.
-#   3. Nada con commits que no estén en su origen    -> se anota y se conserva.
-#   4. Lista blanca intocable: sockets y estado vivo (docker, tmux, el puente del navegador,
-#      y los scratchpads de Claude, que gestiona el propio harness).
+# Safety rules (why it does not delete more than it should):
+#   1. Nothing touched in the last GRACE_MIN minutes -> a parallel session may
+#      still be using it.
+#   2. Nothing with uncommitted changes             -> recorded and kept.
+#   3. Nothing with commits missing from a remote   -> recorded and kept.
+#   4. Untouchable allowlist: sockets and live state (docker, tmux, the browser
+#      bridge, and Claude's own scratchpads, which the harness manages).
 #
-# DRY_RUN=1 para ver qué haría sin borrar nada.
+# Set DRY_RUN=1 to see what it would do without deleting anything.
 
 set -uo pipefail
 
@@ -22,155 +24,212 @@ GRACE_MIN=${GRACE_MIN:-60}
 REPORT="${HOME}/.claude/session-cleanup-report.log"
 DRY_RUN=${DRY_RUN:-0}
 
-# Directorios que nunca se tocan, aunque cumplan el resto de reglas.
-PROTEGIDOS='^(claude-[0-9]+|claude-.*|tmux-[0-9]+|docker-desktop-privileged.*|powerlog|\.X11-unix|systemd-.*)$'
+# Directories that are never touched, even if they satisfy every other rule.
+PROTECTED='^(claude-[0-9]+|claude-.*|tmux-[0-9]+|docker-desktop-privileged.*|powerlog|\.X11-unix|systemd-.*)$'
 
-log() { printf '%s\n' "$*" >> "$REPORT" 2>/dev/null; }
+# The header is written lazily, only once there is a first line worth
+# recording. Otherwise every session start and end left an empty
+# "=== start ===" / "=== end ===" pair and buried anything that mattered.
+HEADER_WRITTEN=0
+log() {
+  if [ "$HEADER_WRITTEN" = "0" ]; then
+    printf '\n=== %s  (cwd: %s) ===\n' \
+      "$(date '+%Y-%m-%d %H:%M:%S')" "${CLAUDE_PROJECT_DIR:-$PWD}" >> "$REPORT" 2>/dev/null
+    HEADER_WRITTEN=1
+  fi
+  printf '%s\n' "$*" >> "$REPORT" 2>/dev/null
+}
 say() { [ "$DRY_RUN" = "1" ] && printf '%s\n' "$*"; }
 
-borrar() {
-  local ruta="$1" motivo="$2"
+# Truncate the report to the last MAX_LOG lines so it cannot grow forever.
+rotate_report() {
+  local max=${MAX_LOG:-400} n
+  [ -f "$REPORT" ] || return 0
+  n=$(wc -l < "$REPORT" 2>/dev/null | tr -d ' ')
+  [ -n "$n" ] && [ "$n" -gt "$max" ] || return 0
+  tail -n "$max" "$REPORT" > "$REPORT.tmp" 2>/dev/null && mv -f "$REPORT.tmp" "$REPORT"
+}
+
+delete_it() {
+  local path="$1" reason="$2"
   if [ "$DRY_RUN" = "1" ]; then
-    say "BORRARÍA  $ruta  ($motivo)"
+    say "WOULD DELETE  $path  ($reason)"
   else
-    rm -rf -- "$ruta" 2>/dev/null && log "  borrado: $ruta ($motivo)"
+    rm -rf -- "$path" 2>/dev/null && log "  deleted: $path ($reason)"
   fi
 }
 
-conservar() {
-  local ruta="$1" motivo="$2"
-  say "CONSERVO  $ruta  ($motivo)"
-  log "  CONSERVADO: $ruta -> $motivo"
+keep_it() {
+  local path="$1" reason="$2"
+  say "KEEPING  $path  ($reason)"
+  log "  KEPT: $path -> $reason"
 }
 
 # ---------------------------------------------------------------------------
-# Directorios temporales candidatos, según sistema operativo
+# Candidate temp directories, per operating system
 # ---------------------------------------------------------------------------
-# macOS: /private/tmp (y /tmp, que es un symlink al anterior)
-# Linux: /tmp
-# Windows (Git Bash): $TEMP / $TMP -> C:/Users/<u>/AppData/Local/Temp
-raices_tmp() {
-  local candidatos=()
-  [ -n "${TMPDIR:-}" ] && candidatos+=("$TMPDIR")
-  [ -n "${TEMP:-}" ]   && candidatos+=("$TEMP")
-  [ -n "${TMP:-}" ]    && candidatos+=("$TMP")
-  candidatos+=("/tmp" "/private/tmp")
+# macOS: $TMPDIR (/var/folders/.../T) and /private/tmp (/tmp symlinks to it)
+# Linux and WSL: /tmp
+temp_roots() {
+  local candidates=()
+  [ -n "${TMPDIR:-}" ] && candidates+=("$TMPDIR")
+  candidates+=("/tmp" "/private/tmp")
 
-  # Deduplicamos por ruta real: en macOS /tmp y /private/tmp son el mismo sitio.
-  local vistos="" r real
-  for r in "${candidatos[@]}"; do
-    # En Git Bash, $TEMP/$TMP llegan en formato Windows (C:\Users\...\Temp).
-    case "$r" in
-      *\\*|[A-Za-z]:*)
-        command -v cygpath >/dev/null 2>&1 && r=$(cygpath -u "$r" 2>/dev/null)
-        ;;
-    esac
+  # Deduplicate by real path: on macOS /tmp and /private/tmp are the same place.
+  local seen="" r real
+  for r in "${candidates[@]}"; do
     [ -d "$r" ] || continue
     real=$(cd "$r" 2>/dev/null && pwd -P) || continue
-    case "|$vistos|" in
+    case "|$seen|" in
       *"|$real|"*) continue ;;
     esac
-    vistos="$vistos|$real"
+    seen="$seen|$real"
     printf '%s\n' "$real"
   done
 }
 
-# Edad en minutos, sin depender de `find -mmin` ni del formato de `stat`.
-reciente() {
-  local ruta="$1" edad
-  # perl viene con macOS, con casi toda distro Linux y con Git for Windows.
+# Age in minutes of ONE file or directory, without relying on `find -mmin` or
+# on the output format of `stat`.
+touched_recently() {
+  local path="$1" age
+  [ -e "$path" ] || return 1
+  # perl ships with macOS and with virtually every Linux distro.
   if command -v perl >/dev/null 2>&1; then
-    edad=$(perl -e 'print int((time - (stat($ARGV[0]))[9]) / 60)' "$ruta" 2>/dev/null)
-    if [ -n "$edad" ]; then
-      [ "$edad" -lt "$GRACE_MIN" ]
+    age=$(perl -e 'print int((time - (stat($ARGV[0]))[9]) / 60)' "$path" 2>/dev/null)
+    if [ -n "$age" ]; then
+      [ "$age" -lt "$GRACE_MIN" ]
       return $?
     fi
   fi
-  # Sin perl: `find -mmin`, presente tanto en GNU find como en BSD find.
-  [ -n "$(find "$ruta" -maxdepth 0 -mmin "-$GRACE_MIN" 2>/dev/null)" ]
+  # Without perl: `find -mmin`, present in both GNU find and BSD find.
+  [ -n "$(find "$path" -maxdepth 0 -mmin "-$GRACE_MIN" 2>/dev/null)" ]
 }
 
-log "=== $(date '+%Y-%m-%d %H:%M:%S') limpieza de sesión (cwd: ${CLAUDE_PROJECT_DIR:-$PWD}) ==="
+# Is there any sign that someone is working in here right now?
+#
+# The mtime of the top-level directory only changes when entries are created or
+# removed *in* it, so an agent can spend two hours editing inside src/ while the
+# root still looks old. .git/index is rewritten by every add, status and
+# checkout, and lock files only exist while git is actually running.
+is_active() {
+  local path="$1" f
+  for f in "$path" "$path/.git/index" "$path/.git/HEAD" "$path/.git/FETCH_HEAD"; do
+    touched_recently "$f" && return 0
+  done
+  # A live lock means work in progress no matter what the timestamps say.
+  [ -e "$path/.git/index.lock" ] && return 0
+  return 1
+}
+
+# Does it hold commits that exist on no remote?
+#
+# This used to be checked only when the remote was a filesystem path, so a clone
+# of a GitHub URL carrying unpushed work skipped the rule entirely and got
+# deleted. `--all --not --remotes` works for any remote, and with no remote at
+# all it counts every commit, which is the cautious answer.
+unpushed_commits() {
+  local path="$1" n
+  n=$(git -C "$path" rev-list --count --all --not --remotes 2>/dev/null)
+  [ -n "$n" ] && [ "$n" != "0" ] && printf '%s' "$n"
+}
 
 # ---------------------------------------------------------------------------
-# 1. Worktrees de git huérfanos en el proyecto actual
+# 1. Orphaned git worktrees in the current project
 # ---------------------------------------------------------------------------
-repo_raiz=$(git -C "${CLAUDE_PROJECT_DIR:-$PWD}" rev-parse --show-toplevel 2>/dev/null)
-if [ -n "$repo_raiz" ]; then
-  principal=$(git -C "$repo_raiz" worktree list --porcelain 2>/dev/null | awk '/^worktree /{print $2; exit}')
-  por_defecto=main
-  git -C "$repo_raiz" rev-parse --verify main >/dev/null 2>&1 || por_defecto=master
+repo_root=$(git -C "${CLAUDE_PROJECT_DIR:-$PWD}" rev-parse --show-toplevel 2>/dev/null)
+if [ -n "$repo_root" ]; then
+  primary=$(git -C "$repo_root" worktree list --porcelain 2>/dev/null | awk '/^worktree /{print $2; exit}')
+  default_branch=main
+  git -C "$repo_root" rev-parse --verify main >/dev/null 2>&1 || default_branch=master
 
-  git -C "$repo_raiz" worktree list --porcelain 2>/dev/null | awk '/^worktree /{print $2}' | while read -r wt; do
-    [ "$wt" = "$principal" ] && continue
+  worktrees=()
+  while IFS= read -r w; do worktrees+=("$w"); done \
+    < <(git -C "$repo_root" worktree list --porcelain 2>/dev/null | awk '/^worktree /{print $2}')
+
+  for wt in "${worktrees[@]}"; do
+    [ "$wt" = "$primary" ] && continue
     [ -d "$wt" ] || continue
 
-    sucio=$(git -C "$wt" status --porcelain 2>/dev/null | wc -l | tr -d ' ')
-    if [ "$sucio" != "0" ]; then
-      conservar "$wt" "$sucio ficheros sin commitear"
+    dirty=$(git -C "$wt" status --porcelain 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$dirty" != "0" ]; then
+      keep_it "$wt" "$dirty uncommitted files"
       continue
     fi
 
-    cabeza=$(git -C "$wt" rev-parse HEAD 2>/dev/null)
-    if ! git -C "$repo_raiz" merge-base --is-ancestor "$cabeza" "$por_defecto" 2>/dev/null; then
-      sueltos=$(git -C "$repo_raiz" rev-list --count "$por_defecto".."$cabeza" 2>/dev/null)
-      conservar "$wt" "$sueltos commits sin integrar en $por_defecto"
+    head=$(git -C "$wt" rev-parse HEAD 2>/dev/null)
+    if ! git -C "$repo_root" merge-base --is-ancestor "$head" "$default_branch" 2>/dev/null; then
+      ahead=$(git -C "$repo_root" rev-list --count "$default_branch".."$head" 2>/dev/null)
+      keep_it "$wt" "$ahead commits not merged into $default_branch"
       continue
     fi
 
     if [ "$DRY_RUN" = "1" ]; then
-      say "BORRARÍA  $wt  (worktree limpio y ya integrado en $por_defecto)"
+      say "WOULD DELETE  $wt  (clean worktree, already merged into $default_branch)"
     else
-      git -C "$repo_raiz" worktree unlock "$wt" >/dev/null 2>&1
-      git -C "$repo_raiz" worktree remove --force "$wt" >/dev/null 2>&1 \
-        && log "  worktree eliminado: $wt (limpio y ya integrado)"
+      git -C "$repo_root" worktree unlock "$wt" >/dev/null 2>&1
+      git -C "$repo_root" worktree remove --force "$wt" >/dev/null 2>&1 \
+        && log "  worktree removed: $wt (clean and already merged)"
     fi
   done
 
-  [ "$DRY_RUN" = "1" ] || git -C "$repo_raiz" worktree prune >/dev/null 2>&1
+  [ "$DRY_RUN" = "1" ] || git -C "$repo_root" worktree prune >/dev/null 2>&1
 fi
 
 # ---------------------------------------------------------------------------
-# 2. Clones temporales en los directorios temporales del sistema
+# 2. Throwaway clones in the system temp directories
 # ---------------------------------------------------------------------------
-raices_tmp | while read -r raiz; do
-  [ -d "$raiz" ] || continue
-  say "--- escaneando $raiz ---"
+# Collected into an array before iterating: with `temp_roots | while read` the
+# body runs in a subshell, HEADER_WRITTEN would not survive it, and the report
+# would end up with one repeated header per root.
+roots=()
+while IFS= read -r r; do roots+=("$r"); done < <(temp_roots)
 
-  for ruta in "$raiz"/*; do
-    [ -e "$ruta" ] || continue
-    nombre=$(basename "$ruta")
+for root in "${roots[@]}"; do
+  [ -d "$root" ] || continue
+  say "--- scanning $root ---"
 
-    printf '%s' "$nombre" | grep -qE "$PROTEGIDOS" && continue
+  for path in "$root"/*; do
+    [ -e "$path" ] || continue
+    name=$(basename "$path")
 
-    # Sólo nos metemos con clones de git; ficheros sueltos y basura ajena se quedan.
-    [ -e "$ruta/.git" ] || continue
+    printf '%s' "$name" | grep -qE "$PROTECTED" && continue
 
-    # Regla 1: si se ha tocado hace poco, otra sesión puede estar usándolo.
-    if reciente "$ruta"; then
-      conservar "$ruta" "modificado hace menos de $GRACE_MIN min (posible sesión viva)"
+    # Only git clones are in scope; loose files and other people's junk stay.
+    [ -e "$path/.git" ] || continue
+
+    # Rule 1: recently touched means another session may still be using it.
+    if is_active "$path"; then
+      keep_it "$path" "touched less than $GRACE_MIN min ago (session may be live)"
       continue
     fi
 
-    sucio=$(git -C "$ruta" status --porcelain 2>/dev/null | wc -l | tr -d ' ')
-    if [ "$sucio" != "0" ]; then
-      conservar "$ruta" "$sucio ficheros sin commitear"
+    dirty=$(git -C "$path" status --porcelain 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$dirty" != "0" ]; then
+      keep_it "$path" "$dirty uncommitted files"
       continue
     fi
 
-    # Regla 3: sus commits deben existir en el repo de origen.
-    origen=$(git -C "$ruta" config --get remote.origin.url 2>/dev/null)
-    cabeza=$(git -C "$ruta" rev-parse HEAD 2>/dev/null)
-    if [ -n "$origen" ] && [ -d "$origen" ] && [ -n "$cabeza" ]; then
-      if ! git -C "$origen" cat-file -e "$cabeza" 2>/dev/null; then
-        conservar "$ruta" "tiene commits que no están en $origen"
+    # Rule 3: nothing holding commits that are not already on a remote.
+    ahead=$(unpushed_commits "$path")
+    if [ -n "$ahead" ]; then
+      keep_it "$path" "$ahead unpushed commits"
+      continue
+    fi
+
+    # And when the remote is a filesystem path, check it still is one: a
+    # deleted origin leaves the clone as the only copy.
+    origin=$(git -C "$path" config --get remote.origin.url 2>/dev/null)
+    head=$(git -C "$path" rev-parse HEAD 2>/dev/null)
+    if [ -n "$origin" ] && [ -d "$origin" ] && [ -n "$head" ]; then
+      if ! git -C "$origin" cat-file -e "$head" 2>/dev/null; then
+        keep_it "$path" "holds commits missing from $origin"
         continue
       fi
     fi
 
-    borrar "$ruta" "clone temporal obsoleto"
+    delete_it "$path" "stale temporary clone"
   done
 done
 
-log "=== fin ==="
+rotate_report
 exit 0
