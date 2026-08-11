@@ -1,62 +1,70 @@
-# herdr — atajos de teclado (equivalentes a tmux)
+# herdr — keyboard shortcuts
 
-Prefix: **Ctrl+Q** (antes Ctrl+B por defecto; cambiado para que coincida con tu `~/.tmux.conf`)
+Prefix: **Ctrl+Q** (was Ctrl+B by default; changed out of tmux habit, and tmux
+is no longer installed).
 
-Config real en `~/.config/herdr/config.toml`. Recarga con `herdr server reload-config` tras editar.
+The tmux equivalences below are kept as a mental map, not because tmux is still
+around.
 
-## Tabs (= "windows" en tmux)
-| Atajo | Acción |
+Real config in `~/.config/herdr/config.toml`. Reload with
+`herdr server reload-config` after editing.
+
+## Tabs (tmux "windows")
+| Shortcut | Action |
 |---|---|
-| `prefix + c` | Nueva tab |
-| `prefix + Shift+T` | Renombrar tab |
-| `prefix + e`  (o `p`) | Tab anterior |
-| `prefix + Shift+E`  (o `n`) | Tab siguiente |
-| `prefix + Shift+K`  (o `Shift+X`) | Cerrar tab |
-| `prefix + 1..9` | Saltar directo a la tab N |
+| `prefix + c` | New tab |
+| `prefix + Shift+T` | Rename tab |
+| `prefix + e` (or `p`) | Previous tab |
+| `prefix + Shift+E` (or `n`) | Next tab |
+| `prefix + Shift+K` (or `Shift+X`) | Close tab |
+| `prefix + 1..9` | Jump straight to tab N |
 
-⚠️ No existe forma de reordenar/mover tabs de sitio (ni por teclado ni por ratón) — no está implementado en herdr.
+⚠️ There is no way to reorder or move tabs (neither by keyboard nor by mouse) —
+it is not implemented in herdr.
 
 ## Panes / splits
-| Atajo | Acción |
+| Shortcut | Action |
 |---|---|
-| `prefix + v`  (o `prefix + Shift+_`) | Split a la derecha |
-| `prefix + -` (minus) | Split abajo |
-| `prefix + h/j/k/l`  (o `Alt+←/↓/↑/→` sin prefix) | Moverte entre panes |
-| `prefix + x` | Cerrar pane |
-| `prefix + z` | Zoom del pane |
-| `prefix + Shift+R` | Modo resize |
-| `prefix + Shift+P` | Renombrar pane |
-| `prefix + u` | Editar scrollback (antes estaba en `e`, se movió) |
+| `prefix + v` (or `prefix + Shift+_`) | Split right |
+| `prefix + -` (minus) | Split down |
+| `prefix + h/j/k/l` (or `Alt+←/↓/↑/→` without prefix) | Move between panes |
+| `prefix + x` | Close pane |
+| `prefix + z` | Zoom pane |
+| `prefix + Shift+R` | Resize mode |
+| `prefix + Shift+P` | Rename pane |
+| `prefix + u` | Edit scrollback (used to be on `e`, moved) |
 
-⚠️ No hay swap-pane (`>`/`<` de tmux) ni copy-mode vi — para copiar, seleccionar con arrastre de ratón.
+⚠️ There is no swap-pane (tmux's `>`/`<`) and no vi copy-mode — to copy, select
+by dragging with the mouse.
 
-## Spaces / Workspaces (= "sessions" en tmux)
-| Atajo | Acción |
+## Spaces / workspaces (tmux "sessions")
+| Shortcut | Action |
 |---|---|
-| `prefix + Shift+N` | Nuevo space |
-| `prefix + Shift+W` | Renombrar space |
-| `prefix + Shift+D` | Cerrar space |
-| `prefix + W` | Selector de spaces (picker) |
-| `prefix + G` | Goto / navigate mode (aquí sí responden las flechas ↑↓) |
-| `prefix + Shift+9`  `(` | Space anterior |
-| `prefix + Shift+0`  `)` | Space siguiente |
+| `prefix + Shift+N` | New space |
+| `prefix + Shift+W` | Rename space |
+| `prefix + Shift+D` | Close space |
+| `prefix + W` | Space picker |
+| `prefix + G` | Goto / navigate mode (arrows do respond here) |
+| `prefix + Shift+9` `(` | Previous space |
+| `prefix + Shift+0` `)` | Next space |
 
-## Agentes (claude, codex, pi, opencode...)
-No son una entidad propia: son un pane normal donde corres el CLI del agente y herdr lo autodetecta (estado working/blocked/done/idle en el sidebar).
+## Agents (claude, codex, pi, opencode…)
+They are not their own entity: they are an ordinary pane running the agent's
+CLI, which herdr autodetects (working/blocked/done/idle in the sidebar).
 
-| Atajo | Acción |
+| Shortcut | Action |
 |---|---|
-| `prefix + A` | Siguiente agente |
-| `prefix + Shift+A` | Agente anterior |
-| `prefix + Alt+1..9` | Saltar directo al agente N |
-| *(sin atajo dedicado)* | Abrir uno nuevo: split/tab nueva + escribir `claude`/`codex`/etc. |
-| `prefix + Shift+P` | Renombrar (renombra el pane que lo contiene) |
-| `prefix + x` | Cerrar (mata el pane, y con él el proceso) |
+| `prefix + A` | Next agent |
+| `prefix + Shift+A` | Previous agent |
+| `prefix + Alt+1..9` | Jump straight to agent N |
+| *(no dedicated shortcut)* | Open a new one: new split/tab, then type `claude`/`codex`/etc. |
+| `prefix + Shift+P` | Rename (renames the pane holding it) |
+| `prefix + x` | Close (kills the pane, and the process with it) |
 
 ## General
-| Atajo | Acción |
+| Shortcut | Action |
 |---|---|
 | `prefix + r` | Reload config |
-| `prefix + ?` | Ver todos los bindings activos |
+| `prefix + ?` | Show every active binding |
 | `prefix + q` | Detach |
-| Ratón | Sigue activo en paralelo (clic, arrastre, resize) — no se desactivó nada |
+| Mouse | Still active in parallel (click, drag, resize) — nothing was disabled |
