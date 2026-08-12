@@ -1,23 +1,10 @@
 {
+  "cleanupPeriodDays": 20,
   "attribution": {
     "commit": "",
     "pr": ""
   },
-  "model": "opus[1m]",
-  "cleanupPeriodDays": 20,
-  "skillOverrides": {
-    "use-railway": "off"
-  },
   "permissions": {
-    "deny": [
-      "Read(./.env)",
-      "Read(./.env.*)",
-      "Read(./**/*.pem)",
-      "Read(./**/*.key)",
-      "Read(./**/id_rsa*)",
-      "Read(./**/id_ed25519*)",
-      "Read(./**/.aws/credentials)"
-    ],
     "allow": [
       "Bash(git add:*)",
       "Bash(git commit:*)",
@@ -32,7 +19,21 @@
       "Bash(cargo --version)",
       "Bash(rustup show:*)",
       "Bash(claude mcp:*)"
-    ]
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)",
+      "Read(./**/id_rsa*)",
+      "Read(./**/id_ed25519*)",
+      "Read(./**/.aws/credentials)"
+    ],
+    "defaultMode": "auto"
+  },
+  "model": "claude-fable-5[1m]",
+  "skillOverrides": {
+    "use-railway": "off"
   },
   "hooks": {
     "SessionStart": [
@@ -87,5 +88,6 @@
     }
   },
   "effortLevel": "high",
-  "theme": "dark"
+  "theme": "dark",
+  "skipWorkflowUsageWarning": true
 }
