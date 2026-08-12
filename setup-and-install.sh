@@ -178,8 +178,17 @@ ensure_brew() {
         say "  would run the official Homebrew installer"
         return 0
     fi
-    NONINTERACTIVE=1 /bin/bash -c \
-        "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/brew/HEAD/install.sh)" || return 1
+    # Download first, run second. The usual one-liner, bash -c "$(curl ...)",
+    # hides a failed download: the substitution collapses to the empty string,
+    # bash runs nothing and exits 0, and the only trace left is curl's own
+    # error further up the output.
+    local url=https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
+    local installer
+    if ! installer=$(curl -fsSL "$url") || [ -z "$installer" ]; then
+        err "  could not download the Homebrew installer from $url"
+        return 1
+    fi
+    NONINTERACTIVE=1 /bin/bash -c "$installer" || return 1
 
     for candidate in /opt/homebrew/bin/brew /usr/local/bin/brew /home/linuxbrew/.linuxbrew/bin/brew; do
         [ -x "$candidate" ] && eval "$("$candidate" shellenv)" && break
