@@ -129,6 +129,18 @@ alias hm='git log --format=%B -n 1 HEAD'
 
 alias bear='clear && echo "Clear as a bear!"'
 
+# Claude Code: one account per CLAUDE_CONFIG_DIR. Each directory keeps its own
+# .claude.json — which is where the OAuth session lives — plus its own history
+# and projects; CLAUDE.md, the hooks, the statusline, plugins and skills are
+# shared by symlink. Plain `claude` still uses ~/.claude, so the IDE extension
+# and anything scripted are unaffected.
+#
+# The aliases are per machine, not per repo: setup-and-install.sh generates them
+# from the names chosen there, and on a machine that declined multiple accounts
+# this file simply does not exist.
+[ -r "$HOME/.config/dotfiles/claude-accounts.zsh" ] \
+    && source "$HOME/.config/dotfiles/claude-accounts.zsh"
+
 # ---------------------------------------------------------------------------
 # Functions
 # ---------------------------------------------------------------------------
