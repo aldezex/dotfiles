@@ -1,0 +1,6 @@
+[features]
+remote_plugin = true
+apps = true
+
+[mcp_servers.notion]
+enabled = true

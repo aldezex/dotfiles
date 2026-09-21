@@ -65,6 +65,12 @@ LINKS=(
     "claude_hook_herdr-agent-state.sh:.claude/hooks/herdr-agent-state.sh"
     "claude_CLAUDE.md:.claude/CLAUDE.md"
     "claude_hook_session-cleanup.sh:.claude/hooks/session-cleanup.sh"
+    "codex_AGENTS.md:.codex/AGENTS.md"
+    "codex_hooks.json:.codex/hooks.json"
+    "codex_session_cleanup.py:.codex/hooks/session-cleanup.py"
+    "codex_hook_herdr-agent-state.sh:.codex/herdr-agent-state.sh"
+    "codex_integraciones.config.toml:.codex/integraciones.config.toml"
+    "codex_completo.config.toml:.codex/completo.config.toml"
 )
 
 # The same config, mirrored into a secondary Claude Code account directory.
@@ -1024,6 +1030,19 @@ do_uninstall() {
     exit 0
 }
 
+# Bootstrap only: trust entries, credentials, and local model choices stay local.
+step_codex_config() {
+    head_ "Codex"
+    if [ ! -e "$HOME/.codex/config.toml" ] && [ ! -L "$HOME/.codex/config.toml" ]; then
+        run mkdir -p "$HOME/.codex"
+        run cp "$DOTFILES/codex_config.toml" "$HOME/.codex/config.toml"
+        ok "  initial token-efficient config created"
+    else
+        info "  existing config.toml preserved (defaults: codex_config.toml)"
+    fi
+    info "  open /hooks in Codex to review and trust the installed lifecycle hooks"
+}
+
 # ---------------------------------------------------------------------------
 # Dispatch
 # ---------------------------------------------------------------------------
@@ -1037,6 +1056,7 @@ step_links
 step_stale_links
 record_links_state
 step_claude_accounts
+step_codex_config
 step_nvim
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,5 @@
+[features]
+apps = true
+
+[mcp_servers.notion]
+enabled = true

@@ -37,6 +37,9 @@ brew "ripgrep"        # telescope live_grep
 brew "lazygit"        # <leader>gg in nvim
 brew "git-delta"      # git pager, wired up in gitconfig
 
+# Agent lifecycle hooks
+brew "python"         # Codex cleanup and herdr hooks (also on Linux/WSL)
+
 # Claude Code
 brew "jq"             # statusline.sh parses its stdin with it
                       # (macOS ships /usr/bin/jq, WSL does not)
