@@ -145,3 +145,43 @@ settings). New installations receive those defaults automatically. Open a new
 session after changing configuration. Run Codex inside WSL to use the WSL
 configuration; this installation does not configure a separate native Windows
 Codex process.
+
+## One request to update a machine
+
+Tell the agent (Codex, Claude, or another agent that reads `AGENTS.md`):
+
+> En ~/dotfiles, lee AGENTS.md, actualiza el repo y ejecuta actualiza codex.
+
+On a machine that has not pulled these instructions yet, say:
+
+> Actualiza ~/dotfiles con git pull --ff-only conservando mis cambios locales;
+> después lee AGENTS.md y ejecuta ./actualiza codex.
+
+The agent synchronizes Git, previews the changes, applies them with backups,
+and verifies the result. No further permission is needed for the requested
+update; Codex's own hook-trust review still happens on each machine.
+
+```sh
+./actualiza codex --dry-run
+./actualiza codex
+```
+
+Supported targets:
+
+| Target | Files/settings applied |
+| --- | --- |
+| `codex` | Instructions, hooks, profiles and minimal-mode config settings |
+| `claude` | Primary Claude account's managed settings, instructions and hooks |
+| `terminal` | Ghostty and herdr config/cheatsheet |
+| `shell` | zsh, Starship and Git config/helpers |
+| `todo` | All the above |
+
+`actualiza` needs Python 3.11+ and Git. It does not pull Git itself, upgrade
+packages, touch credentials, or regenerate secondary Claude accounts. Use the
+full installer for those account/package operations. On Windows run it in WSL.
+
+Unlike the bootstrap installer, `actualiza codex` also updates an **existing**
+config.toml: only the six minimal-workflow settings are changed. Model choice,
+reasoning, approval policy, project paths and other settings are preserved.
+Unusual TOML layouts that cannot be edited safely are rejected before writing.
+Backups are stored in `~/.dotfiles-backup/actualiza-*`. Repeat runs are idempotent.
