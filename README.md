@@ -30,6 +30,53 @@ Because these are symlinks, editing `~/.zshrc` is editing this repo.
 Work inside WSL, which is just another Linux box here. Install from the WSL
 shell against the WSL `$HOME` — not from PowerShell, not over `/mnt/c`.
 
+## Claude Code: Jev
+
+[Jev](https://docs.typesafe.ai/llms.txt) is TypeSafe's decision model. It doesn't
+write text. Given some text and typed questions, it picks an option, gives a score,
+or returns the probability that something is true, in under a second for a fraction of a cent.
+The reconciler links:
+
+- the `jev` skill (`claude_skill_jev_*` → `~/.claude/skills/jev/`): `jev.py` calls
+  the TypeSafe API directly (no OpenRouter), and `SKILL.md` tells Claude how to use it
+  ("use Jev to sort these") and when to decide for itself;
+- the model router (`router.py`), wired into `claude_settings.json` as a
+  `UserPromptSubmit` hook, plus a `SessionStart` hook that switches it off;
+- four helper agents (`claude_agent_jev-*` → `~/.claude/agents/`), one pinned to
+  each model: `jev-tiny` Haiku, `jev-everyday` Sonnet, `jev-large` Opus,
+  `jev-hardest` Fable. Secondary Claude accounts get them too.
+
+**The API key is not in this repo.** On each machine, get one at
+<https://console.typesafe.ai/keys> and store it without it ever being echoed:
+
+```zsh
+mkdir -p ~/.config/typesafe && chmod 700 ~/.config/typesafe && (umask 077; read -rs "k?TypeSafe API key: "; printf %s "$k" > ~/.config/typesafe/api_key); echo
+```
+
+Without a key, everything stays silent: the hooks exit 0 and never block a message.
+
+### Model router
+
+Claude Code can't switch models per message, and a hook can't change the model.
+It can only add a note. So when the router is on, the hook asks Jev for the smallest
+model that can do each message. Messages shorter than 4 words and `/commands` are
+skipped. The hook then adds a note such as `Jev sized this as EVERYDAY, confidence
+0.98`, and Claude hands the work to the matching helper agent. If Jev's confidence
+is below 0.6, or the message is a follow-up that only makes sense in the
+conversation, Claude handles it itself.
+
+```text
+/jev on       every message goes to Jev first
+/jev off      back to normal
+/jev status   ON/OFF, messages per size, Jev cost so far
+```
+
+It is **OFF by default**, and every new session (`startup`) switches it off again.
+The switch is shared, so that also turns it off in sessions already open.
+**While it is on, every message you send leaves the machine for TypeSafe**, so keep it
+off for private work. State and counters live in
+`~/.config/typesafe/router_state.json`, next to the key, outside the repo.
+
 ## Codex
 
 The reconciler links the global `AGENTS.md`, `hooks.json`, cleanup helper,
@@ -171,7 +218,7 @@ Supported targets:
 | Target | Files/settings applied |
 | --- | --- |
 | `codex` | Instructions, hooks, profiles and minimal-mode config settings |
-| `claude` | Primary Claude account's managed settings, instructions and hooks |
+| `claude` | Primary Claude account's managed settings, instructions, hooks, and the Jev skill and agents |
 | `terminal` | Ghostty and herdr config/cheatsheet |
 | `shell` | zsh, Starship and Git config/helpers |
 | `todo` | All the above |

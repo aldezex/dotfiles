@@ -51,6 +51,16 @@
             "timeout": 120
           }
         ]
+      },
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$HOME/.claude/skills/jev/router.py\" off >/dev/null 2>&1 || true",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "SessionEnd": [
@@ -61,6 +71,17 @@
             "type": "command",
             "command": "bash \"$HOME/.claude/hooks/session-cleanup.sh\"",
             "timeout": 120
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$HOME/.claude/skills/jev/router.py\" hook 2>/dev/null || true",
+            "timeout": 5
           }
         ]
       }
