@@ -236,6 +236,10 @@ path=("$BUN_INSTALL/bin" $path)
 
 # rust (rustup): puts cargo, rustfmt and rust-analyzer on PATH.
 [ -s "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+# cargo/env does nothing when ~/.cargo/bin is already on PATH, and in a nested
+# zsh (herdr, tmux) `brew shellenv` above has just moved Homebrew back in front
+# of it: Homebrew's rust-analyzer would then win over rustup's. Put it first.
+[ -d "$HOME/.cargo/bin" ] && path=("$HOME/.cargo/bin" $path)
 
 # go: binaries installed with `go install`
 [ -d "$HOME/go/bin" ] && path=("$HOME/go/bin" $path)
